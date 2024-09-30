@@ -1,10 +1,32 @@
-<input class="form-control rounded-0 rounded-top bg-dark border-secondary text-light" type="text" [(ngModel)]="username" placeholder="Enter a username"
-    (keyup.enter)="fetchNewData()">
-<div *ngIf="userData!==undefined">
+<!-- Information -->
+<div class="alert alert-warning demo-alert">
+    <p><strong>Important:</strong></p>
+    <p>Data persitency is not guaranteed as updates are made.</p>
+    <p>Data is also regularly cleaned from the public API.</p>
+    <p>This is just a demo to showcase the capabilities of the TwitchScan API.</p>
+</div>
+
+<div class="input-group sticky-input" id="stickyInput">
+    <input class="form-control bg-dark border-secondary text-light" type="text" [(ngModel)]="username"
+        placeholder="Enter a username" (keyup.enter)="fetchNewData()" />
+    <div *ngIf="userData" class="btn btn-dark border-secondary reload-btn" (click)="collapseAll()"
+        title="Collapse">
+        <i class="fa-solid fa-chevron-down"></i>
+    </div>
+    <div *ngIf="userData" class="btn btn-dark border-secondary reload-btn" (click)="exportToJSON()"
+        title="Export to JSON">
+        <i class="fa-solid fa-floppy-disk"></i>
+    </div>
+    <div *ngIf="userData" class="btn btn-dark border-secondary reload-btn" (click)="fetchData()" title="Reload data">
+        <i class="fa-solid fa-rotate-right"></i>
+    </div>
+</div>
+
+<div *ngIf="userData !== undefined">
     <app-user-section [username]="username" [data]="userData"></app-user-section>
 </div>
 
 <!-- Information -->
- <div class="alert alert-info rounded-0 rounded-bottom" *ngIf="info">
-    <strong>Information:</strong> {{info}}
+<div class="alert alert-info mt-2" *ngIf="info">
+    <strong>Information:</strong> {{ info }}
 </div>

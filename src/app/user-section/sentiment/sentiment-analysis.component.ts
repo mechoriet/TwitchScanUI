@@ -3,34 +3,68 @@ import { SentimentAnalysis } from '../../models/sentiment.model';
 import { SentimentOverTimeComponent } from './sentiment-over-time.component';
 import { TopUsersComponent } from './top-users.component';
 import { CommonModule } from '@angular/common';
-import { AverageMessageLengthComponent } from '../message/message-length.component';
 
 @Component({
   selector: 'app-sentiment-analysis',
   standalone: true,
   template: `
-    <div class="card bg-dark text-light">
-      <h3>Sentiment Analysis</h3>
-      <app-average-message-length [length]="averageMessageLength"></app-average-message-length>
-      <ng-container *ngIf="hasPositiveUsers()">
-        <app-top-users class="mb-2" [title]="titlePositive" [users]="sentiment.topPositiveUsers" [positive]="true"></app-top-users>
-      </ng-container>
-      <ng-container *ngIf="hasNegativeUsers()">
-        <app-top-users [title]="titleNegative" [users]="sentiment.topNegativeUsers" [positive]="false"></app-top-users>
-      </ng-container>
-      <app-sentiment-over-time class="p-2" [data]="sentiment.sentimentOverTime"></app-sentiment-over-time>
+    <div class="card border-secondary bg-dark text-light">
+      <h4 (click)="redrawTrigger = !redrawTrigger"
+      class="pointer"
+      data-bs-toggle="collapse"
+      data-bs-target="#sentimentAnalysisCollapse"
+      aria-expanded="true"
+      aria-controls="sentimentAnalysisCollapse"><i class="fa-solid fa-magnifying-glass-chart me-2"></i> Sentiment Analysis</h4>
+
+      <div id="sentimentAnalysisCollapse" class="collapse show">
+        <div class="row">
+          <div class="col-12 col-md-6">
+            <ng-container *ngIf="hasPositiveUsers()">
+              <app-top-users
+                class="mb-2"
+                [title]="titlePositive"
+                [users]="sentiment.topPositiveUsers"
+                [positive]="true"
+                [redrawTrigger]="redrawTrigger"
+              ></app-top-users>
+            </ng-container>
+          </div>
+          <div class="col-12 col-md-6">
+            <ng-container *ngIf="hasNegativeUsers()">
+              <app-top-users
+                [title]="titleNegative"
+                [users]="sentiment.topNegativeUsers"
+                [positive]="false"
+                [redrawTrigger]="redrawTrigger"
+              ></app-top-users>
+            </ng-container>
+          </div>
+        </div>
+        <app-sentiment-over-time
+          class="p-2"
+          [data]="sentiment.sentimentOverTime"
+          [redrawTrigger]="redrawTrigger"
+        ></app-sentiment-over-time>
+      </div>
     </div>
   `,
-  styles: [`
-    .card { border: 1px solid #ccc; padding: 1rem; margin: 0.5rem 0; }
-  `],
-  imports: [SentimentOverTimeComponent, TopUsersComponent, CommonModule, AverageMessageLengthComponent]
+  styles: [
+    `
+      .card {
+        border: 1px solid #ccc;
+        padding: 1rem;
+        margin: 0.5rem 0;
+      }
+    `,
+  ],
+  imports: [SentimentOverTimeComponent, TopUsersComponent, CommonModule],
 })
 export class SentimentAnalysisComponent {
   @Input() sentiment!: SentimentAnalysis;
   @Input() averageMessageLength: number = 0;
   titlePositive = 'Top Positive Users';
   titleNegative = 'Top Negative Users';
+  redrawTrigger = false;
 
   hasPositiveUsers(): boolean {
     return this.sentiment && this.sentiment.topPositiveUsers.length > 0;

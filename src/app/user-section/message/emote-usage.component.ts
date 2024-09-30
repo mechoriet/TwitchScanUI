@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { EmoteUsage } from '../../models/emote.model';
 import { CommonModule } from '@angular/common';
 import { ChartType, GoogleChartsModule } from 'angular-google-charts';
@@ -7,15 +7,23 @@ import { ChartType, GoogleChartsModule } from 'angular-google-charts';
   selector: 'app-emote-usage',
   standalone: true,
   template: `
-    <div class="card bg-dark text-light text-center">
-      <h3>Emote Usage</h3>
-      <div class="card bg-dark text-light">        
+    <div class="card bg-dark border-secondary text-light">
+      <h4 (click)="updateChartData()"
+      class="pointer"
+      data-bs-toggle="collapse"
+      data-bs-target="#emoteCollapse"
+      aria-expanded="true"
+      aria-controls="emoteCollapse"><i class="fa-solid fa-face-grin-tongue-wink me-2"></i> Emotes</h4>
+    <div id="emoteCollapse" class="collapse show">
+      <div class="card border-secondary bg-dark text-light text-center">     
+        <h5>Emote Usage</h5>   
         <google-chart *ngIf="emoteChartData.length > 0" style="width: 100%;"
               [type]="chartType"
             [data]="emoteChartData" 
             [columns]="chartColumns"
             [options]="chartOptions">
         </google-chart>
+      </div>
       </div>
     </div>
   `,
@@ -27,15 +35,15 @@ import { ChartType, GoogleChartsModule } from 'angular-google-charts';
   `],
   imports: [CommonModule, GoogleChartsModule]
 })
-export class EmoteUsageComponent implements OnInit {
+export class EmoteUsageComponent implements OnInit, OnChanges {
   @Input() emotes: EmoteUsage[] = [];
 
   chartType = ChartType.BarChart
   chartColumns = ['Emote', 'Usage'];
   emoteChartData: any[] = [];
   chartOptions = {
-    backgroundColor: '#343a40', // Dark background
-    legend: { textStyle: { color: 'white' } },
+    backgroundColor: '#212529', // Dark background
+    legend: { textStyle: { color: 'white' }, position: 'none' },
     hAxis: { textStyle: { color: 'white' } },
     vAxis: { textStyle: { color: 'white' } },
     bars: 'vertical',
@@ -49,6 +57,10 @@ export class EmoteUsageComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    this.updateChartData();
+  }
+
+  ngOnChanges(): void {
     this.updateChartData();
   }
 
