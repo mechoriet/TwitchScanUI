@@ -2,6 +2,32 @@ import { EmoteUsage } from "./emote.model";
 import { SentimentAnalysis } from "./sentiment.model";
 import { SubscriptionStatistic } from "./subscription-model";
 
+export interface InitiatedChannel {
+  channelName: string;
+  messageCount: number;
+  createdAt: string;
+  isOnline: boolean;
+}
+
+export interface ChannelStatus {
+  channelName: string;
+  isOnline: boolean;
+  messageCount: number;
+}
+
+export interface ChannelMetrics {
+  viewerStatistics: ViewerStatistics;
+  currentGame: string;
+  uptime: string;
+  viewersOverTime: { [key: string]: number };
+}
+
+export interface ViewerStatistics {
+  currentViewers: number;
+  averageViewers: number;
+  peakViewers: number;
+}
+
 export interface UserData {
   AverageMessageLength: number;
   EmoteUsage: EmoteUsage[];
@@ -20,6 +46,7 @@ export interface UserData {
   TotalUsers: number;
   UniqueWords: number;
   WordFrequency: { [key: string]: number };
+  ChannelMetrics: ChannelMetrics;
 }
 
 export interface TotalBans {

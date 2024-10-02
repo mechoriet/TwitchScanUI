@@ -2,7 +2,6 @@ export interface SentimentAnalysis {
     sentimentOverTime: SentimentOverTime[];
     topPositiveUsers: SentimentUser[];
     topNegativeUsers: SentimentUser[];
-    sentimentOverTimeLabeled: SentimentOverTimeLabeled[];
     topPositiveMessages: SentimentMessage[];
     topNegativeMessages: SentimentMessage[];
   }
@@ -14,15 +13,6 @@ export interface SentimentAnalysis {
     averageNeutral: number;
     averageCompound: number;
     messageCount: number;
-  }
-  
-  export interface SentimentOverTimeLabeled {
-    timePeriod: string;
-    averagePositive: string;
-    averageNegative: string;
-    averageNeutral: string;
-    averageCompound: string;
-    messageCount: string;
   }
   
   export interface SentimentUser {

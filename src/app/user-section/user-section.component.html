@@ -1,7 +1,7 @@
 <div class="user-section">
-  <app-audience-engagement [userData]="data"></app-audience-engagement>
+  <app-peak-activity-periods [username]="username" [peakActivityPeriods]="data.PeakActivityPeriods" [metrics]="data.ChannelMetrics"></app-peak-activity-periods>
   <app-sentiment-analysis [sentiment]="data.SentimentAnalysis"></app-sentiment-analysis>
-  <app-peak-activity-periods [username]="username" [peakActivityPeriods]="data.PeakActivityPeriods"></app-peak-activity-periods>
+  <app-audience-engagement [userData]="data"></app-audience-engagement>
   <ng-container *ngIf="data.SubscriptionStatistic.totalSubscribers>0">
     <app-subscription-statistic [subscription]="data.SubscriptionStatistic"></app-subscription-statistic>
   </ng-container>

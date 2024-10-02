@@ -22,11 +22,6 @@ input {
 }
 
 .sticky-input {
-    position: -webkit-sticky;
-    /* For Safari */
-    position: sticky;
-    top: 10px;
-    z-index: 1000;
     transition: box-shadow 0.3s ease;
 }
 
@@ -37,4 +32,20 @@ input {
 .reload-btn {
     padding-top: 4px;
     font-size: 18px;
+}
+
+@mixin width {
+    width: auto !important;
+}
+table {
+    &.table-fit {
+        @include width;
+        table-layout: auto !important;
+        thead th,
+        tbody td,
+        tfoot th,
+        tfoot td  {
+            @include width;
+        }
+    }
 }

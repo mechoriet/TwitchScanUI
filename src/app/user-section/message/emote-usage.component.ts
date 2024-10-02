@@ -1,7 +1,8 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { EmoteUsage } from '../../models/emote.model';
 import { CommonModule } from '@angular/common';
-import { ChartType, GoogleChartsModule } from 'angular-google-charts';
+import { ChartConfiguration } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
   selector: 'app-emote-usage',
@@ -13,17 +14,19 @@ import { ChartType, GoogleChartsModule } from 'angular-google-charts';
       data-bs-toggle="collapse"
       data-bs-target="#emoteCollapse"
       aria-expanded="true"
-      aria-controls="emoteCollapse"><i class="fa-solid fa-face-grin-tongue-wink me-2"></i> Emotes</h4>
-    <div id="emoteCollapse" class="collapse show">
-      <div class="card border-secondary bg-dark text-light text-center">     
-        <h5>Emote Usage</h5>   
-        <google-chart *ngIf="emoteChartData.length > 0" style="width: 100%;"
-              [type]="chartType"
-            [data]="emoteChartData" 
-            [columns]="chartColumns"
-            [options]="chartOptions">
-        </google-chart>
-      </div>
+      aria-controls="emoteCollapse"><i class="fa-solid fa-face-grin-tongue-wink me-2 text-warning"></i> Emotes</h4>
+      <div id="emoteCollapse" class="collapse">
+        <div class="card border-secondary bg-dark text-light text-center">     
+          <h5>Emote Usage</h5>   
+          <canvas
+            *ngIf="emoteChartData.datasets[0].data.length > 0"
+            baseChart
+            [data]="emoteChartData"
+            [options]="chartOptions"
+            [type]="'bar'"
+          >
+          </canvas>
+        </div>
       </div>
     </div>
   `,
@@ -31,28 +34,62 @@ import { ChartType, GoogleChartsModule } from 'angular-google-charts';
     .card { border: 1px solid #ccc; padding: 1rem; margin: 0.5rem 0; }
     ul { list-style-type: none; padding: 0; }
     li { padding: 0.2rem 0; }
-    div[google-chart] { width: 100%; height: 400px; }
+    canvas { width: 100% !important; height: 400px !important; }
   `],
-  imports: [CommonModule, GoogleChartsModule]
+  imports: [CommonModule, BaseChartDirective]
 })
 export class EmoteUsageComponent implements OnInit, OnChanges {
+  @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   @Input() emotes: EmoteUsage[] = [];
 
-  chartType = ChartType.BarChart
-  chartColumns = ['Emote', 'Usage'];
-  emoteChartData: any[] = [];
-  chartOptions = {
-    backgroundColor: '#212529', // Dark background
-    legend: { textStyle: { color: 'white' }, position: 'none' },
-    hAxis: { textStyle: { color: 'white' } },
-    vAxis: { textStyle: { color: 'white' } },
-    bars: 'vertical',
-    height: 400,
-    colors: ['#1b9e77'],
+  // Chart Data Structure
+  emoteChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets: [
+      {
+        label: 'Usage',
+        data: [],
+        backgroundColor: '#1b9e77',
+        borderColor: '#1b9e77',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Chart Options
+  chartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'white',
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+      y: {
+        ticks: {
+          color: 'white',
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+        beginAtZero: true,
+      },
+    },
     animation: {
-      startup: true,
       duration: 1000,
-      easing: 'out',
+      easing: 'easeInOutQuart',
     },
   };
 
@@ -66,6 +103,10 @@ export class EmoteUsageComponent implements OnInit, OnChanges {
 
   updateChartData(): void {
     // Populate chart data with the top 10 emote usages
-    this.emoteChartData = this.emotes.slice(0, 10).map(emote => [emote.key, emote.value]);
+    const topEmotes = this.emotes.slice(0, 10);
+    this.emoteChartData.labels = topEmotes.map(emote => emote.key);
+    this.emoteChartData.datasets[0].data = topEmotes.map(emote => emote.value);
+
+    this.chart?.chart?.update();
   }
 }

@@ -9,6 +9,7 @@ import { TopUsersComponent } from './sentiment/top-users.component';
 import { CommonModule } from '@angular/common';
 import { PeakActivityPeriodsComponent } from './users/peak-activity-periods.component';
 import { AudienceEngagementComponent } from './users/audience-engagement.component';
+import { ChannelMetricsComponent } from "./users/channel-metric.component";
 
 @Component({
   selector: 'app-user-section',
@@ -23,8 +24,9 @@ import { AudienceEngagementComponent } from './users/audience-engagement.compone
     SubscriptionStatisticComponent,
     PeakActivityPeriodsComponent,
     AudienceEngagementComponent,
-    CommonModule
-  ],
+    CommonModule,
+    ChannelMetricsComponent
+],
   templateUrl: './user-section.component.html',
   styleUrl: './user-section.component.scss'
 })

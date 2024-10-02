@@ -4,9 +4,9 @@ import { DataService } from '../../services/app-service/data.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
-    selector: 'app-thumbnail',
-    standalone: true,
-    template: `
+  selector: 'app-thumbnail',
+  standalone: true,
+  template: `
     <div
       *ngIf="imageBlobMap.size > 0"
       class="card border-secondary bg-dark text-light text-center"
@@ -14,7 +14,7 @@ import { CommonModule } from '@angular/common';
       <div class="thumbnails-container">
         <div *ngFor="let image of imageBlobMap | keyvalue" class="thumbnail">
           <img
-            [src]="getSantizedImageUrl(image.value)"
+            [src]="image.value"
             alt="Live preview image"
             class="thumbnail-image"
           />
@@ -22,33 +22,50 @@ import { CommonModule } from '@angular/common';
             <span class="overlay-text">{{ formatDate(image.key) }}</span>
           </div>
         </div>
+        <i class="fa-solid fa-images thumbnail-icon position-absolute top-50 start-50 translate-middle"></i>
       </div>
     </div>
   `,
-    styles: [
-        `
+  styles: [
+    `
       .thumbnails-container {
         display: flex;
         justify-content: flex-end;
-        gap: 0;
-        margin: 0;
-        padding: 0;
+        gap: 5px;
+        padding: 5px;
+        background: linear-gradient(
+          90deg,
+          #333,
+          #222
+        );
+        border: 1px solid #444;
+        border-radius: 5px;
+        overflow-x: auto; 
+        white-space: nowrap;
+        scrollbar-width: thin;
       }
 
       .thumbnail {
-        width: 150px;
-        height: 84px;
+        width: 220px;
+        min-width: 220px;
         overflow: hidden;
         background-color: #000;
         display: flex;
         justify-content: center;
         align-items: center;
         position: relative;
+        border: 2px solid #555;
       }
 
       .thumbnail-image {
         width: 100%;
         height: auto;
+      }
+
+      .thumbnail-icon {
+        font-size: 64px;
+        color: rgba(255, 255, 255, 0.7);
+        z-index: 2;
       }
 
       .overlay {
@@ -65,61 +82,62 @@ import { CommonModule } from '@angular/common';
         color: #fff;
       }
     `,
-    ],
-    imports: [CommonModule],
+  ],
+  imports: [CommonModule],
 })
 export class ThumbnailComponent implements OnInit {
-    imageBlobMap: Map<string, Blob> = new Map();
-    lastFetchTime: Date = new Date(0);
-    @Input({ required: true }) username: string = '';
+  @Input({ required: true }) username: string = '';
 
-    constructor(
-        private dataService: DataService,
-        public sanitizer: DomSanitizer
-    ) { }
+  imageBlobMap: Map<string, SafeUrl> = new Map();
+  private imagesToKeep: number = 15;
+  private timeBetweenFetches: number = 4 * 60 * 1000;
+  private lastFetchTime: Date = new Date(0);
+  constructor(
+    private dataService: DataService,
+    public sanitizer: DomSanitizer
+  ) { }
 
-    ngOnInit(): void {
-        // Fetch the image for the current user
-        const url = this.dataService.getUserThumbnail(this.username);
-        this.fetchAndSaveImage(url);
+  ngOnInit(): void {
+    // Fetch the image for the current user
+    const url = this.dataService.getUserThumbnail(this.username);
+    this.fetchAndSaveImage(url);
 
-        // Subscribe to image URL updates and fetch images
-        this.dataService.imageUrlSubject.subscribe((url: string) => {
-            this.fetchAndSaveImage(url);
-        });
-    }
+    // Subscribe to image URL updates and fetch images
+    this.dataService.imageUrlSubject.subscribe((url: string) => {
+      this.fetchAndSaveImage(url);
+    });
+  }
 
-    getSantizedImageUrl(image: Blob): SafeUrl {
-        return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(image));
-    }
+  getSantizedImageUrl(image: Blob): SafeUrl {
+    return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(image));
+  }
 
-    fetchAndSaveImage(url: string): void {
-        fetch(url)
-            .then((response) => response.blob())
-            .then((blob) => {
-                // Check if the image was fetched within the last 5 minutes
-                const currentTime = new Date();
-                if (currentTime.getTime() - this.lastFetchTime.getTime() < 300000) {
-                    return;
-                }
-                this.lastFetchTime = currentTime;
+  fetchAndSaveImage(url: string): void {
+    fetch(url)
+      .then((response) => response.blob())
+      .then((blob) => {
+        // Check if the image was fetched within the last 5 minutes
+        const currentTime = new Date();
+        if (currentTime.getTime() - this.lastFetchTime.getTime() < this.timeBetweenFetches) {
+          return;
+        }
+        this.lastFetchTime = currentTime;
 
-                var timeString = new Date().toUTCString();
-                this.imageBlobMap.set(timeString, blob);
-                // Only keep the last 10 images
-                if (this.imageBlobMap.size > 10) {
-                    this.imageBlobMap.delete(this.imageBlobMap.keys().next().value);
-                }
-            })
-            .catch((error) => {
-                console.error('Error fetching the image:', error);
-            });
-    }
+        var timeString = new Date().toUTCString();
+        this.imageBlobMap.set(timeString, this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blob)));
+        if (this.imageBlobMap.size > this.imagesToKeep) {
+          this.imageBlobMap.delete(this.imageBlobMap.keys().next().value);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching the image:', error);
+      });
+  }
 
-    formatDate(dateString: string): string {
-        const date = new Date(dateString);
-        var hours = date.getUTCHours().toString().padStart(2, '0');
-        var minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
-    }
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    var hours = date.getUTCHours().toString().padStart(2, '0');
+    var minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
 }

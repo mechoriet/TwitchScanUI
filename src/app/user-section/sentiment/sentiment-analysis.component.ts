@@ -3,6 +3,7 @@ import { SentimentAnalysis } from '../../models/sentiment.model';
 import { SentimentOverTimeComponent } from './sentiment-over-time.component';
 import { TopUsersComponent } from './top-users.component';
 import { CommonModule } from '@angular/common';
+import { TopMessagesComponent } from "./top-messages.componen";
 
 @Component({
   selector: 'app-sentiment-analysis',
@@ -14,9 +15,14 @@ import { CommonModule } from '@angular/common';
       data-bs-toggle="collapse"
       data-bs-target="#sentimentAnalysisCollapse"
       aria-expanded="true"
-      aria-controls="sentimentAnalysisCollapse"><i class="fa-solid fa-magnifying-glass-chart me-2"></i> Sentiment Analysis</h4>
+      aria-controls="sentimentAnalysisCollapse"><i class="fa-solid fa-magnifying-glass-chart me-2 text-warning"></i> Sentiment Analysis</h4>
 
-      <div id="sentimentAnalysisCollapse" class="collapse show">
+      <div id="sentimentAnalysisCollapse" class="collapse">
+        <app-sentiment-over-time
+          class="p-2"
+          [data]="sentiment.sentimentOverTime"
+          [redrawTrigger]="redrawTrigger"
+        ></app-sentiment-over-time>
         <div class="row">
           <div class="col-12 col-md-6">
             <ng-container *ngIf="hasPositiveUsers()">
@@ -40,11 +46,6 @@ import { CommonModule } from '@angular/common';
             </ng-container>
           </div>
         </div>
-        <app-sentiment-over-time
-          class="p-2"
-          [data]="sentiment.sentimentOverTime"
-          [redrawTrigger]="redrawTrigger"
-        ></app-sentiment-over-time>
       </div>
     </div>
   `,
@@ -57,7 +58,7 @@ import { CommonModule } from '@angular/common';
       }
     `,
   ],
-  imports: [SentimentOverTimeComponent, TopUsersComponent, CommonModule],
+  imports: [SentimentOverTimeComponent, TopUsersComponent, CommonModule, TopMessagesComponent],
 })
 export class SentimentAnalysisComponent {
   @Input() sentiment!: SentimentAnalysis;

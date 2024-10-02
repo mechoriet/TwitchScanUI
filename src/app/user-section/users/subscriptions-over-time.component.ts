@@ -1,18 +1,17 @@
 import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
-import { SentimentOverTime } from '../../models/sentiment.model';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 
 @Component({
-  selector: 'app-sentiment-over-time',
+  selector: 'app-subscriptions-over-time',
   standalone: true,
   template: `
     <div class="card border-secondary bg-dark text-light text-center">
-      <h5>Sentiment Over Time (UTC)</h5>
+      <h5>Subscriptions Over Time (UTC)</h5>
 
-      <!-- Line Chart for Sentiment Over Time -->
+      <!-- Line Chart for Subscriptions Over Time -->
       <canvas
         *ngIf="chartData.datasets[0].data.length > 0"
         baseChart
@@ -53,52 +52,22 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
   ],
   imports: [CommonModule, BaseChartDirective],
 })
-export class SentimentOverTimeComponent implements OnInit, OnChanges {
+export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input() data: SentimentOverTime[] = [];
+  @Input({ required: true }) subscriptions!: { key: string; value: number }[];
   @Input() redrawTrigger: boolean = false;
-  
-  constructor(private interpolationService: DataInterpolationService) {}
+
+  constructor(private interpolationService: DataInterpolationService) { }
 
   // Chart Data Structure
   chartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [
       {
-        label: 'Positive (%)',
+        label: 'Subscriptions',
         data: [],
         borderColor: '#1b9e77',
         backgroundColor: 'rgba(27, 158, 119, 0.2)',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 0,
-        pointHitRadius: 10,
-      },
-      {
-        label: 'Negative (%)',
-        data: [],
-        borderColor: '#d95f02',
-        backgroundColor: 'rgba(217, 95, 2, 0.2)',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 0,
-        pointHitRadius: 10,
-      },
-      {
-        label: 'Neutral (%)',
-        data: [],
-        borderColor: '#7570b3',
-        backgroundColor: 'rgba(117, 112, 179, 0.2)',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 0,
-        pointHitRadius: 10,
-      },
-      {
-        label: 'Compound',
-        data: [],
-        borderColor: '#e7298a',
-        backgroundColor: 'rgba(231, 41, 138, 0.2)',
         fill: true,
         tension: 0.3,
         pointRadius: 0,
@@ -113,6 +82,7 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
+        display: true,
         labels: { color: 'white' },
       },
       tooltip: {
@@ -140,9 +110,10 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
         min: 0,
       },
     },
-    animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart',
+    elements: {
+      line: {
+        borderWidth: 2,
+      },
     },
   };
 
@@ -155,47 +126,24 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
   }
 
   updateChartData(): void {
-    if (!this.data || this.data.length === 0) return;
+    if (!this.subscriptions || this.subscriptions.length === 0) return;
 
-    // Sort the input data by time
-    const sortedData = this.data.sort(
-      (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
-    );
-
-    // Prepare raw data for interpolation
-    const rawData = sortedData.map((entry) => ({
-      time: entry.time,
-      value: entry.averageCompound,
+    // Prepare the data for interpolation
+    const rawData = this.subscriptions.map(sub => ({
+      time: sub.key,
+      value: sub.value,
     }));
 
-    // Use the interpolation service to fill missing time intervals
+    // Use the interpolation service to fill in missing values
     const interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000); // 1-minute interval
 
-    // Set the labels (time) and dataset values for the chart based on the interpolated data
-    this.chartData.labels = interpolatedData.map((entry) =>
+    // Map the complete data to chart labels and dataset
+    this.chartData.labels = interpolatedData.map(entry =>
       this.interpolationService.formatTime(entry.time)
     );
-    
-    // Populate each dataset with corresponding interpolated values
-    this.chartData.datasets[0].data = interpolatedData.map(
-      (entry, index) => sortedData[index]?.averagePositive * 100 || 0
-    );
-    this.chartData.datasets[1].data = interpolatedData.map(
-      (entry, index) => sortedData[index]?.averageNegative * 100 || 0
-    );
-    this.chartData.datasets[2].data = interpolatedData.map(
-      (entry, index) => sortedData[index]?.averageNeutral * 100 || 0
-    );
-    this.chartData.datasets[3].data = interpolatedData.map((entry) => entry.value);
+    this.chartData.datasets[0].data = interpolatedData.map(entry => entry.value);
 
-    // Update the chart
+    // Update chart
     this.chart?.chart?.update();
-  }
-
-  formatTime(time: string): string {
-    const date = new Date(time);
-    const hours = date.getUTCHours().toString().padStart(2, '0');
-    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
   }
 }

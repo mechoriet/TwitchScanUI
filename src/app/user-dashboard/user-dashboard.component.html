@@ -1,32 +1,130 @@
-<!-- Information -->
-<div class="alert alert-warning demo-alert">
-    <p><strong>Important:</strong></p>
-    <p>Data persitency is not guaranteed as updates are made.</p>
-    <p>Data is also regularly cleaned from the public API.</p>
-    <p>This is just a demo to showcase the capabilities of the TwitchScan API.</p>
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item my-2" style="width: 50vw;">
+                    <div class="input-group sticky-input rounded flex-grow-1 me-2" [class.sticky-shadow]="userData!==undefined">
+                        <span class="input-group-text bg-dark border-secondary text-light" id="basic-addon1">
+                            <i class="fa-brands fa-twitch"></i>
+                        </span>
+                        <input class="form-control bg-dark border-secondary text-light" type="text"
+                            [(ngModel)]="username" [disabled]="loading" placeholder="Enter Twitch channel username"
+                            (keyup.enter)="fetchNewData()" aria-label="Twitch channel username" />
+                        <button *ngIf="userData===undefined" class="btn btn-dark border-secondary" type="button"
+                            (click)="fetchNewData()" title="Start Monitoring">
+                            <i class="fa-solid fa-play text-warning"></i>
+                        </button>
+                        <button *ngIf="loading" class="btn btn-dark border-secondary" type="button"
+                            title="Loading data..." disabled>
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        </button>
+                        <button *ngIf="userData" class="btn btn-dark border-secondary" type="button" (click)="reset()"
+                            title="Reset">
+                            <i class="fa-solid fa-times text-warning"></i>
+                        </button>
+                        <button *ngIf="userData" class="btn btn-dark border-secondary" (click)="collapseAll()"
+                            title="Collapse All Sections">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <button *ngIf="userData" class="btn btn-dark border-secondary" (click)="exportToJSON()"
+                            title="Export to JSON">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+                        <button *ngIf="userData" class="btn btn-dark border-secondary" (click)="fetchData()"
+                            title="Reload Data">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Alerts -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true"
+        [class.show]="notDismissed">
+        <div class="d-flex">
+            <div class="toast-body">
+                <p class="text-danger"><strong>Important Notice:</strong></p>
+                <p>This demo is designed to showcase the capabilities of the <a
+                        href="https://github.com/LenBanana/TwitchScanAPI" target="_blank">TwitchScanAPI</a>.</p>
+                <p>This application works with live data. To begin, enter a Twitch username and press "Enter" to start
+                    monitoring the channel.</p>
+                <p>Once monitoring is initiated, data will gradually accumulate after a short delay. Depending on
+                    channel activity, this process may take a few minutes.</p>
+                <p class="text-danger"><strong>Note:</strong> Data persistence is not guaranteed, as live updates are
+                    ongoing, also the public API regularly cleans data.</p>
+            </div>
+            <button type="button" class="btn-close btn-close-black me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close" (click)="saveDismissed()"></button>
+        </div>
+    </div>
 </div>
 
-<div class="input-group sticky-input" id="stickyInput">
-    <input class="form-control bg-dark border-secondary text-light" type="text" [(ngModel)]="username"
-        placeholder="Enter a username" (keyup.enter)="fetchNewData()" />
-    <div *ngIf="userData" class="btn btn-dark border-secondary reload-btn" (click)="collapseAll()"
-        title="Collapse">
-        <i class="fa-solid fa-chevron-down"></i>
-    </div>
-    <div *ngIf="userData" class="btn btn-dark border-secondary reload-btn" (click)="exportToJSON()"
-        title="Export to JSON">
-        <i class="fa-solid fa-floppy-disk"></i>
-    </div>
-    <div *ngIf="userData" class="btn btn-dark border-secondary reload-btn" (click)="fetchData()" title="Reload data">
-        <i class="fa-solid fa-rotate-right"></i>
-    </div>
-</div>
+<!-- Main Content -->
+<div class="container mt-5 pt-4">
 
-<div *ngIf="userData !== undefined">
-    <app-user-section [username]="username" [data]="userData"></app-user-section>
-</div>
+    <!-- Information Alert -->
+    <div class="alert alert-info" *ngIf="info">
+        <strong>Information:</strong> {{ info }}
+    </div>
 
-<!-- Information -->
-<div class="alert alert-info mt-2" *ngIf="info">
-    <strong>Information:</strong> {{ info }}
+    <!-- Previously Added Channels -->
+    <div class="card bg-dark text-light border-secondary mt-2"
+        *ngIf="!loading && userData === undefined && initiatedChannels.length > 0">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Previously Added Channels</strong>
+            <button class="btn btn-dark border-secondary" (click)="fetchInitiatedChannels()" title="Refetch Data">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-bordered m-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Thumbnail</th>
+                        <th scope="col">Channel</th>
+                        <th scope="col">Added</th>
+                        <th scope="col">Messages</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="pointer" *ngFor="let channel of initiatedChannels"
+                        (click)="username = channel.channelName; fetchNewData()">
+                        <td>
+                            <img [src]="'https://static-cdn.jtvnw.net/previews-ttv/live_user_' + channel.channelName + '-110x62.jpg'" alt="Channel Thumbnail" />
+                        </td>
+                        <td>
+                            <span class="fw-bold" [ngClass]="{'text-success': channel.isOnline, 'text-danger': !channel.isOnline}">
+                                {{ channel.channelName }}
+                            </span>
+                        </td>
+                        <td>{{ channel.createdAt | date: 'short' }}</td>
+                        <td>{{ channel.messageCount }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="d-flex justify-content-center mt-4" *ngIf="loading">
+        <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- User Data Section -->
+    <div *ngIf="userData !== undefined">
+        <app-user-section [username]="username" [data]="userData"></app-user-section>
+    </div>
 </div>

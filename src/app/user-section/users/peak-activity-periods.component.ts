@@ -1,7 +1,11 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChartType, GoogleChartsModule } from 'angular-google-charts';
+import { ChartConfiguration } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
 import { ThumbnailComponent } from './thumbnail.component';
+import { ChannelMetrics } from '../../models/user.model';
+import { ChannelMetricsComponent } from './channel-metric.component';
+import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 
 @Component({
   selector: 'app-peak-activity-periods',
@@ -14,23 +18,22 @@ import { ThumbnailComponent } from './thumbnail.component';
         data-bs-target="#peakActivityCollapse"
         aria-expanded="true"
         aria-controls="peakActivityCollapse">
-        <i class="fa-solid fa-clock me-2"></i> Activity Periods
+        <i class="fa-solid fa-clock me-2 text-warning"></i> Activity Periods
       </h4>
-      <div id="peakActivityCollapse" class="collapse show">
+      <div id="peakActivityCollapse" class="collapse">
+        <app-thumbnail [username]="username"></app-thumbnail>  
+        <app-channel-metrics [metrics]="metrics"></app-channel-metrics>
         <div class="card border-secondary bg-dark text-light text-center">
-          <!-- Google Line Chart for Peak Activity Periods -->
           <h5>Messages over time (UTC)</h5>
-          <google-chart
-            *ngIf="chartData.length > 0"
-            style="width: 100%;"
-            [type]="chartType"
+          <canvas
+            *ngIf="chartData.datasets[0].data.length > 0"
+            baseChart
             [data]="chartData"
-            [columns]="chartColumns"
             [options]="chartOptions"
+            [type]="'line'"
           >
-          </google-chart>
-        </div>
-        <app-thumbnail [username]="username"></app-thumbnail>
+          </canvas>
+        </div>      
       </div>
     </div>
   `,
@@ -41,41 +44,81 @@ import { ThumbnailComponent } from './thumbnail.component';
         padding: 1rem;
         margin: 0.5rem 0;
       }
-      div[google-chart] {
-        width: 100%;
-        height: 400px;
+      canvas {
+        width: 100% !important;
+        height: 400px !important;
+      }
+      .pointer {
+        cursor: pointer;
       }
     `,
   ],
-  imports: [CommonModule, GoogleChartsModule, ThumbnailComponent],
+  imports: [CommonModule, BaseChartDirective, ThumbnailComponent, ChannelMetricsComponent],
 })
 export class PeakActivityPeriodsComponent implements OnInit, OnChanges {
+  @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   @Input() peakActivityPeriods: { [key: string]: number } = {};
+  @Input({ required: true }) metrics!: ChannelMetrics;
   @Input({ required: true }) username: string = '';
 
-  chartType: ChartType = ChartType.AreaChart;
-  chartColumns: string[] = ['Period', 'Messages'];
-  chartData: any[] = [];
-  chartOptions = {
-    backgroundColor: '#212529',
-    colors: ['#1b9e77'],
-    legend: { textStyle: { color: 'white' }, position: 'none' },
-    hAxis: {
-      textStyle: { color: 'white', fontSize: 10 },
+  // Inject the DataInterpolationService
+  constructor(private dataInterpolationService: DataInterpolationService) {}
+
+  // Chart Data Structure
+  chartData: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [
+      {
+        label: 'Messages',
+        data: [],
+        fill: true,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        tension: 0.3,
+        pointRadius: 0,
+        pointHitRadius: 10,
+      },
+    ],
+  };
+
+  // Chart Options
+  chartOptions: ChartConfiguration<'line'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: { color: 'white' },
+      },
+      tooltip: {
+        enabled: true,
+      },
     },
-    vAxis: {
-      textStyle: { color: 'white' },
-      viewWindowMode: 'explicit',
-      viewWindow: {
+    scales: {
+      x: {
+        ticks: {
+          color: 'white',
+          font: { size: 10 },
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+      y: {
+        ticks: {
+          color: 'white',
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+        beginAtZero: true,
         min: 0,
       },
     },
-    chartArea: { left: '5%', width: '93%', height: '75%' },
-    height: 400,
-    animation: {
-      startup: true,
-      duration: 1000,
-      easing: 'out',
+    elements: {
+      line: {
+        borderWidth: 2,
+      },
     },
   };
 
@@ -88,24 +131,20 @@ export class PeakActivityPeriodsComponent implements OnInit, OnChanges {
   }
 
   updateChartData(): void {
-    // Pre sort the data by time
-    this.peakActivityPeriods = Object.keys(this.peakActivityPeriods)
-      .sort()
-      .reduce((obj, key) => {
-        obj[key] = this.peakActivityPeriods[key];
-        return obj;
-      }, {} as { [key: string]: number });
+    // Prepare the data for interpolation
+    const rawData = Object.keys(this.peakActivityPeriods).map(time => ({
+      time,
+      value: this.peakActivityPeriods[time],
+    }));
 
-    // Convert PeakActivityPeriods object to chart data format
-    this.chartData = Object.entries(this.peakActivityPeriods).map(
-      ([period, activity]) => [this.formatTime(period), activity]
-    );
-  }
+    // Interpolate the data (e.g., with a 1-minute interval)
+    const intervalMs = 60 * 1000; // 1 minute
+    const interpolatedData = this.dataInterpolationService.interpolateData(rawData, intervalMs);
 
-  formatTime(time: string): string {
-    var date = new Date(time);
-    var hours = date.getHours().toString().padStart(2, '0');
-    var minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    // Convert interpolated data to chart format
+    this.chartData.labels = interpolatedData.map(entry => this.dataInterpolationService.formatTime(entry.time));
+    this.chartData.datasets[0].data = interpolatedData.map(entry => entry.value);
+    
+    this.chart?.chart?.update();
   }
 }

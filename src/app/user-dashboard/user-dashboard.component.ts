@@ -1,37 +1,38 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { UserData } from '../models/user.model';
+import { InitiatedChannel, UserData } from '../models/user.model';
 import { DataService } from '../services/app-service/data.service';
 import { UserSectionComponent } from '../user-section/user-section.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Result } from '../models/result';
+import { ThumbnailComponent } from "../user-section/users/thumbnail.component";
 
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [UserSectionComponent, CommonModule, FormsModule],
   templateUrl: './user-dashboard.component.html',
-  styleUrl: './user-dashboard.component.scss'
+  styleUrl: './user-dashboard.component.scss',
+  imports: [
+    UserSectionComponent,
+    CommonModule,
+    FormsModule,
+    ThumbnailComponent
+]
 })
 export class UserDashboardComponent implements OnInit {
+  initiatedChannels: InitiatedChannel[] = [];
   userData: UserData | undefined;
-  loading: boolean = true;
+  loading: boolean = false;
+  notDismissed: boolean = true;
   username: string = '';
   lastUsername: string = '';
   info: string = '';
 
   constructor(private dataService: DataService) {}
 
-  @HostListener('window:scroll', [])
-  onWindowScroll(): void {
-    const stickyElement = document.getElementById('stickyInput');
-    if (stickyElement) {
-      const stickyPosition = stickyElement.getBoundingClientRect().top;
-      if (stickyPosition <= 20) {
-        stickyElement.classList.add('sticky-shadow');
-      } else {
-        stickyElement.classList.remove('sticky-shadow');
-      }
-    }
+  saveDismissed(): void {
+    this.notDismissed = false;
+    localStorage.setItem('dismissed', 'true');
   }
 
   ngOnInit(): void {
@@ -39,6 +40,34 @@ export class UserDashboardComponent implements OnInit {
       if (data) {
         this.userData = data;
         this.loading = false;
+      }
+    });
+    this.dataService.onlineStatusSubject.subscribe((data) => {
+      if (data) {
+        this.initiatedChannels.forEach((channel) => {
+          if (channel.channelName === data.channelName) {
+            channel.isOnline = data.isOnline;
+            channel.messageCount = data.messageCount;
+          }
+        });
+      }
+    });
+
+    this.fetchInitiatedChannels();
+
+    const dismissed = localStorage.getItem('dismissed');
+    if (dismissed) {
+      this.notDismissed = false;
+    }
+  }
+
+  fetchInitiatedChannels(): void {
+    this.dataService.getInitiatedChannels().subscribe({
+      next: (data) => {
+        this.initiatedChannels = data;
+      },
+      error: (err) => {
+        console.error(err);
       }
     });
   }
@@ -49,7 +78,14 @@ export class UserDashboardComponent implements OnInit {
   }
 
   initUser(): void {    
+    if (this.username.length === 0) {
+      this.info = 'Please enter a username to fetch data.';
+      return;
+    }
+
     this.info = '';
+    this.username = this.username.toLowerCase().trim();
+    this.loading = true;
     if (this.lastUsername.length > 0) {
       this.dataService.leaveChannel(this.lastUsername);
       this.lastUsername = '';
@@ -57,6 +93,8 @@ export class UserDashboardComponent implements OnInit {
     this.dataService.initUser(this.username).subscribe({
       next: (data) => {
         this.loading = false;
+        this.info = 'User was not previously initialized. Please wait a couple minutes for data to be accumulated before trying again.';
+        this.fetchInitiatedChannels();
       },
       error: (err) => {
         this.loading = false;
@@ -64,12 +102,21 @@ export class UserDashboardComponent implements OnInit {
           this.fetchData();
           return;
         }
-        this.info = 'User was not previously initialized. Please wait a couple minutes for data to be accumulated before trying again.';
-      },
-      complete: () => {
-        this.loading = false;
+        if (err.status === 403) {
+          this.info = (err.error as Result<object>).error?.errorMessage ?? 'An error occurred while fetching data. Please try again later.';
+          return
+        }
       }
     });
+  }
+
+  reset(): void {
+    this.userData = undefined;
+    this.username = '';
+    this.info = '';
+    this.loading = false;
+    this.fetchInitiatedChannels();
+    this.dataService.leaveChannel(this.lastUsername);
   }
 
   fetchData(): void {    
@@ -78,11 +125,6 @@ export class UserDashboardComponent implements OnInit {
         if (!this.userData) {
           this.lastUsername = this.username;
           this.dataService.joinChannel(this.username);
-
-          // Give google charts time to render before collapsing all to prevent label issues
-          setTimeout(() => {
-            this.collapseAll();
-          }, 500);
         }
         this.userData = data;
         this.loading = false;

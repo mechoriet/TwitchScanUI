@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
-import { UserData } from '../../models/user.model';
+import { ChannelStatus, InitiatedChannel, UserData } from '../../models/user.model';
 import * as signalR from '@microsoft/signalr';
+import { Result } from '../../models/result';
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +16,12 @@ export class DataService {
   private reconnectionDelay = 5000; // 5 seconds
   private channelName: string = '';
 
-  // Observable for new User Data coming in from SignalR
+  // Subject for new User Data coming in from SignalR
   userDataSubject = new Subject<UserData>();
-  imageUrlSubject = new Subject<string>(); // Subject to handle image URL updates
+  // Subject to handle image URL updates
+  imageUrlSubject = new Subject<string>(); 
+  // Subject to handle online status updates
+  onlineStatusSubject = new Subject<ChannelStatus>();
 
   constructor(private http: HttpClient) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -79,6 +83,11 @@ export class DataService {
       const imageUrl = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${this.channelName}-440x248.jpg?timestamp=${timestamp}`;
       this.imageUrlSubject.next(imageUrl);
     });
+
+    // Handle online status updates
+    this.hubConnection.on('ReceiveStatus', (channelStatus: ChannelStatus) => {
+      this.onlineStatusSubject.next(channelStatus);
+    });
   }
 
   getUserThumbnail(username: string): string {
@@ -104,7 +113,23 @@ export class DataService {
     return this.http.get<UserData>(this.apiUrl + "Twitch/GetChannelStatistics?channelName=" + channelName);
   }
 
-  initUser(channelName: string): Observable<void> {
-    return this.http.post<void>(this.apiUrl + "Twitch/Init?channelName=" + channelName, {});
+  initUser(channelName: string): Observable<Result<object>> {
+    if (channelName.includes(',')) {
+      return this.initMultipleUsers(channelName.split(','));
+    }
+
+    return this.http.post<Result<object>>(this.apiUrl + "Twitch/Init?channelName=" + channelName, {});
+  }
+
+  private initMultipleUsers(channelNames: string[]): Observable<Result<object>> {
+    return this.http.post<Result<object>>(this.apiUrl + "Twitch/InitMultiple", channelNames);
+  }
+
+  removeUser(channelName: string): Observable<void> {
+    return this.http.delete<void>(this.apiUrl + "Twitch/Remove?channelName=" + channelName);
+  }
+
+  getInitiatedChannels(): Observable<InitiatedChannel[]> {
+    return this.http.get<InitiatedChannel[]>(this.apiUrl + "Twitch/GetInitiatedChannels");
   }
 }

@@ -6,4 +6,5 @@ export interface SubscriptionStatistic {
     totalGiftedSubscriptions: number;
     averageSubscriptionMonths: number;
     topSubscribers: { [key: string]: number };
+    subscriptionsOverTime: { key: string; value: number }[];
   }
