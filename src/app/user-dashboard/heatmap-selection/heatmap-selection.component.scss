@@ -1,0 +1,20 @@
+.heatmap-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .week {
+    display: flex;
+    flex-direction: column;
+  }
+  .day {
+    width: 20px;
+    height: 20px;
+    margin: 1px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .day:hover {
+    opacity: 0.7;
+  }

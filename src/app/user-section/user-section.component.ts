@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { UserData } from '../models/user.model';
 import { UserDashboardComponent } from '../user-dashboard/user-dashboard.component';
 import { EmoteUsageComponent } from './message/emote-usage.component';
@@ -21,7 +21,6 @@ import { ChannelMetricsComponent } from "./users/channel-metric.component";
     SentimentAnalysisComponent,
     SentimentOverTimeComponent,
     TopUsersComponent,
-    SubscriptionStatisticComponent,
     PeakActivityPeriodsComponent,
     AudienceEngagementComponent,
     CommonModule,
@@ -30,7 +29,21 @@ import { ChannelMetricsComponent } from "./users/channel-metric.component";
   templateUrl: './user-section.component.html',
   styleUrl: './user-section.component.scss'
 })
-export class UserSectionComponent  {
+export class UserSectionComponent implements OnInit {
   @Input({ required: true }) username: string = '';
+  @Input({ required: true }) isOnline: boolean = false;
   @Input() data!: UserData;
+  notDismissed: boolean = true;
+
+  saveDismissed(): void {
+    this.notDismissed = false;
+    localStorage.setItem('dismissedUserSection', 'true');
+  }
+
+  ngOnInit(): void {
+    const dismissed = localStorage.getItem('dismissedUserSection');
+    if (dismissed) {
+      this.notDismissed = false;
+    }
+  }
 }

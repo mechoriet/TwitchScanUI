@@ -2,16 +2,30 @@ import { EmoteUsage } from "./emote.model";
 import { SentimentAnalysis } from "./sentiment.model";
 import { SubscriptionStatistic } from "./subscription-model";
 
-export interface InitiatedChannel {
+export class InitiatedChannel {
   channelName: string;
   messageCount: number;
   createdAt: string;
   isOnline: boolean;
+  historyLength: number;
+
+  constructor(channelName: string) {
+    this.channelName = channelName;
+    this.messageCount = 0;
+    this.createdAt = new Date().toISOString();
+    this.isOnline = false;
+    this.historyLength = 0;
+  }
 }
 
 export interface ChannelStatus {
   channelName: string;
   isOnline: boolean;
+  messageCount: number;
+}
+
+export interface ChannelMessageCount {
+  channelName: string;
   messageCount: number;
 }
 

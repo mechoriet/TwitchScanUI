@@ -90,7 +90,7 @@ export class ThumbnailComponent implements OnInit {
 
   imageBlobMap: Map<string, SafeUrl> = new Map();
   private imagesToKeep: number = 15;
-  private timeBetweenFetches: number = 4 * 60 * 1000;
+  private timeBetweenFetches: number = 5 * 60 * 1000;
   private lastFetchTime: Date = new Date(0);
   constructor(
     private dataService: DataService,

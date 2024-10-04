@@ -10,18 +10,6 @@ import { SubscriptionsOverTimeComponent } from "./subscriptions-over-time.compon
   selector: 'app-subscription-statistic',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light">
-      <h4
-        (click)="updateTopSubscribersChartData(); redrawTrigger = !redrawTrigger"
-        class="pointer"
-        data-bs-toggle="collapse"
-        data-bs-target="#subscriptionCollapse"
-        aria-expanded="true"
-        aria-controls="subscriptionCollapse"
-      >
-        <i class="fa-solid fa-star me-2 text-warning"></i> Subscriptions
-      </h4>
-      <div id="subscriptionCollapse" class="collapse">
         <div class="row">
           <div class="col-12">
             <!-- Subscriptions over time chart -->
@@ -34,7 +22,7 @@ import { SubscriptionsOverTimeComponent } from "./subscriptions-over-time.compon
               [redrawTrigger]="redrawTrigger"
             ></app-subscription-summary>
           </div>
-          <div class="col-12 col-md-6" *ngIf="subscription.topSubscribers">
+          <div class="col-12 col-md-6">
             <div class="card border-secondary bg-dark text-light text-center">
               <h5>Top Gifter</h5>
               <!-- Bar Chart for Top Subscribers -->
@@ -53,8 +41,6 @@ import { SubscriptionsOverTimeComponent } from "./subscriptions-over-time.compon
             </div>
           </div>
         </div>
-      </div>
-    </div>
   `,
   styles: [
     `
@@ -147,6 +133,8 @@ export class SubscriptionStatisticComponent implements OnInit, OnChanges {
   }
 
   updateTopSubscribersChartData(): void {
+    if (!this.subscription.topSubscribers) return;
+
     // Convert topSubscribers object to array and sort by subscriptions descending
     const sortedSubscribers = Object.entries(this.subscription.topSubscribers)
       .sort((a, b) => b[1] - a[1])

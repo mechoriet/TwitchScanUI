@@ -10,35 +10,9 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
   standalone: true,
   template: `
     <div>
-      <div class="card border-secondary bg-dark text-light p-3">
-        <table class="table table-dark table-borderless text-light">
-          <tbody>
-            <tr>
-              <td><i class="fas fa-gamepad"></i> Category:</td>
-              <td>{{ metrics.currentGame }}</td>
-            </tr>
-            <tr>
-              <td><i class="fas fa-clock"></i> Uptime:</td>
-              <td>{{ formatUptime(metrics.uptime) }}</td>
-            </tr>
-            <tr>
-              <td><i class="fas fa-glasses"></i> Current:</td>
-              <td><span class="badge bg-primary">{{ metrics.viewerStatistics.currentViewers }}</span></td>
-            </tr>
-            <tr>
-              <td><i class="fas fa-glasses"></i> Average:</td>
-              <td><span class="badge bg-success">{{ formatAverageViewers(metrics.viewerStatistics.averageViewers) }}</span></td>
-            </tr>
-            <tr>
-              <td><i class="fas fa-glasses"></i> Peak:</td>
-              <td><span class="badge bg-danger">{{ metrics.viewerStatistics.peakViewers }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
       <div class="card border-secondary bg-dark text-light chart-container text-center">
         <h5>Viewers Over Time (UTC)</h5>
-        <canvas
+        <canvas (dblclick)="resetZoom()"
           *ngIf="chartData.datasets[0].data.length > 0"
           baseChart
           [data]="chartData"
@@ -92,7 +66,7 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
   // Chart Options
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: false,    
     plugins: {
       legend: {
         labels: { color: 'white' },
@@ -100,6 +74,20 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
       tooltip: {
         enabled: true,
       },
+      zoom: {       
+        pan: {
+          enabled: true
+        },
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+
+          pinch: {
+            enabled: true
+          },
+        }
+      }
     },
     scales: {
       x: {
@@ -131,6 +119,10 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
     this.updateChartData();
   }
 
+  resetZoom(): void {
+    this.chart?.chart?.resetZoom();
+  }
+
   updateChartData(): void {
     if (!this.metrics || !this.metrics.viewersOverTime) return;
 
@@ -156,15 +148,5 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
     const hours = date.getUTCHours().toString().padStart(2, '0');
     const minutes = date.getUTCMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
-  }
-
-  formatUptime(uptime: string): string {
-    const [hours, minutes, seconds] = uptime.split(':');
-    const cleanSeconds = seconds.split('.')[0];
-    return `${hours}:${minutes}:${cleanSeconds}`;
-  }
-
-  formatAverageViewers(averageViewers: number): string {
-    return Math.round(averageViewers).toLocaleString();
   }
 }

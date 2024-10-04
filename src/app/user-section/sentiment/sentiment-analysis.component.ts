@@ -4,6 +4,8 @@ import { SentimentOverTimeComponent } from './sentiment-over-time.component';
 import { TopUsersComponent } from './top-users.component';
 import { CommonModule } from '@angular/common';
 import { TopMessagesComponent } from "./top-messages.componen";
+import { UserData } from '../../models/user.model';
+import { EmoteUsageComponent } from "../message/emote-usage.component";
 
 @Component({
   selector: 'app-sentiment-analysis',
@@ -15,12 +17,11 @@ import { TopMessagesComponent } from "./top-messages.componen";
       data-bs-toggle="collapse"
       data-bs-target="#sentimentAnalysisCollapse"
       aria-expanded="true"
-      aria-controls="sentimentAnalysisCollapse"><i class="fa-solid fa-magnifying-glass-chart me-2 text-warning"></i> Sentiment Analysis</h4>
+      aria-controls="sentimentAnalysisCollapse"><i class="fa-solid fa-magnifying-glass-chart me-2 text-warning"></i> Sentiment</h4>
 
-      <div id="sentimentAnalysisCollapse" class="collapse">
+      <div id="sentimentAnalysisCollapse" class="collapse show">
         <app-sentiment-over-time
-          class="p-2"
-          [data]="sentiment.sentimentOverTime"
+          [data]="userData.SentimentAnalysis.sentimentOverTime"
           [redrawTrigger]="redrawTrigger"
         ></app-sentiment-over-time>
         <div class="row">
@@ -29,7 +30,7 @@ import { TopMessagesComponent } from "./top-messages.componen";
               <app-top-users
                 class="mb-2"
                 [title]="titlePositive"
-                [users]="sentiment.topPositiveUsers"
+                [users]="userData.SentimentAnalysis.topPositiveUsers"
                 [positive]="true"
                 [redrawTrigger]="redrawTrigger"
               ></app-top-users>
@@ -39,10 +40,16 @@ import { TopMessagesComponent } from "./top-messages.componen";
             <ng-container *ngIf="hasNegativeUsers()">
               <app-top-users
                 [title]="titleNegative"
-                [users]="sentiment.topNegativeUsers"
+                [users]="userData.SentimentAnalysis.topNegativeUsers"
                 [positive]="false"
                 [redrawTrigger]="redrawTrigger"
               ></app-top-users>
+            </ng-container>
+          </div>          
+          <!-- Emote Usage -->
+          <div class="col-12">
+            <ng-container *ngIf="userData.EmoteUsage.length>0">
+              <app-emote-usage [emotes]="userData.EmoteUsage"></app-emote-usage>
             </ng-container>
           </div>
         </div>
@@ -58,20 +65,20 @@ import { TopMessagesComponent } from "./top-messages.componen";
       }
     `,
   ],
-  imports: [SentimentOverTimeComponent, TopUsersComponent, CommonModule, TopMessagesComponent],
+  imports: [SentimentOverTimeComponent, TopUsersComponent, CommonModule, TopMessagesComponent, EmoteUsageComponent],
 })
 export class SentimentAnalysisComponent {
-  @Input() sentiment!: SentimentAnalysis;
+  @Input({required: true}) userData!: UserData;
   @Input() averageMessageLength: number = 0;
   titlePositive = 'Top Positive Users';
   titleNegative = 'Top Negative Users';
   redrawTrigger = false;
 
   hasPositiveUsers(): boolean {
-    return this.sentiment && this.sentiment.topPositiveUsers.length > 0;
+    return this.userData.SentimentAnalysis && this.userData.SentimentAnalysis.topPositiveUsers.length > 0;
   }
 
   hasNegativeUsers(): boolean {
-    return this.sentiment && this.sentiment.topNegativeUsers.length > 0;
+    return this.userData.SentimentAnalysis && this.userData.SentimentAnalysis.topNegativeUsers.length > 0;
   }
 }

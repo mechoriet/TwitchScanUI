@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
-import { ChannelStatus, InitiatedChannel, UserData } from '../../models/user.model';
+import { ChannelMessageCount, ChannelStatus, InitiatedChannel, UserData } from '../../models/user.model';
 import * as signalR from '@microsoft/signalr';
 import { Result } from '../../models/result';
+import { HistoryData, HistoryTimeline } from '../../models/historical.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,8 @@ export class DataService {
   imageUrlSubject = new Subject<string>(); 
   // Subject to handle online status updates
   onlineStatusSubject = new Subject<ChannelStatus>();
+  // Subject to hanlde message count updates
+  messageCountSubject = new Subject<ChannelMessageCount>();
 
   constructor(private http: HttpClient) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -88,6 +91,11 @@ export class DataService {
     this.hubConnection.on('ReceiveStatus', (channelStatus: ChannelStatus) => {
       this.onlineStatusSubject.next(channelStatus);
     });
+
+    // Handle message count updates
+    this.hubConnection.on('ReceiveMessageCount', (channelName: string, messageCount: number) => {
+      this.messageCountSubject.next({ channelName, messageCount });
+    });
   }
 
   getUserThumbnail(username: string): string {
@@ -98,19 +106,25 @@ export class DataService {
   joinChannel(channelName: string): void {
     this.channelName = channelName;
     this.hubConnection.invoke('JoinChannel', channelName)
-      .then(() => console.log('Joined channel: ' + channelName))
       .catch(err => console.error('Error while joining channel: ' + err));
   }
 
   leaveChannel(channelName: string): void {
     this.channelName = '';
     this.hubConnection.invoke('LeaveChannel', channelName)
-      .then(() => console.log('Left channel: ' + channelName))
       .catch(err => console.error('Error while leaving channel: ' + err));
   }
 
   getUserData(channelName: string): Observable<UserData> {
     return this.http.get<UserData>(this.apiUrl + "Twitch/GetChannelStatistics?channelName=" + channelName);
+  }
+
+  getViewCountHistory(channelName: string): Observable<HistoryTimeline[]> {
+    return this.http.get<HistoryTimeline[]>(this.apiUrl + "Twitch/GetViewCountHistory?channelName=" + channelName);
+  }
+
+  getHistoryByKey(channelName: string, key: string): Observable<HistoryData> {
+    return this.http.get<HistoryData>(this.apiUrl + "Twitch/GetHistoryByKey?channelName=" + channelName + "&key=" + key);
   }
 
   initUser(channelName: string): Observable<Result<object>> {

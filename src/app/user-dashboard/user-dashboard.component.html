@@ -1,15 +1,21 @@
 <!-- Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-    <div class="container-fluid">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top border-glow-transition"
+    [class.border-glow]="userData===undefined">
+    <div class="container-fluid my-1">
+        <!-- Brand Icon -->
+        <a class="navbar-brand pointer position-absolute ms-2" (click)="reset()">
+            <i class="fa-solid fa-spider text-warning home-icon"></i>
+        </a>
+
+        <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div *ngIf="userData==undefined" class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto">
-                <li class="nav-item my-2" style="width: 50vw;">
-                    <div class="input-group sticky-input rounded flex-grow-1 me-2" [class.sticky-shadow]="userData!==undefined">
+                <li class="nav-item my-1" style="width: 50vw;">
+                    <div class="input-group rounded flex-grow-1 me-2">
                         <span class="input-group-text bg-dark border-secondary text-light" id="basic-addon1">
                             <i class="fa-brands fa-twitch"></i>
                         </span>
@@ -24,6 +30,30 @@
                             title="Loading data..." disabled>
                             <i class="fa-solid fa-spinner fa-spin"></i>
                         </button>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div *ngIf="userData!==undefined&&!loading" class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item my-2" style="width: 50vw;">
+                    <div class="input-group rounded flex-grow-1 me-2">
+                        <span class="input-group-text bg-dark border-secondary text-light text-warning" id="basic-addon1" 
+                        data-bs-toggle="collapse"
+                        data-bs-target="#viewCountHistory"
+                        aria-expanded="true"
+                        aria-controls="viewCountHistory">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </span>
+                        <span class="form-select bg-dark border-secondary text-light" 
+                        data-bs-toggle="collapse"
+                        data-bs-target="#viewCountHistory"
+                        aria-expanded="true"
+                        aria-controls="viewCountHistory">
+                                <span *ngIf="viewCountHistory.length===0">No
+                                    existing</span> History for {{ username }}
+                        </span>
                         <button *ngIf="userData" class="btn btn-dark border-secondary" type="button" (click)="reset()"
                             title="Reset">
                             <i class="fa-solid fa-times text-warning"></i>
@@ -47,6 +77,12 @@
     </div>
 </nav>
 
+<div *ngIf="viewCountHistory.length>0" class="history-container position-absolute top-0 start-50 translate-middle-x bg-dark border-glow p-2 rounded border-secondary">
+    <div id="viewCountHistory" class="collapse">
+        <app-heatmap-selection [timelines]="viewCountHistory" (idSelected)="onHistoryDateSelected($event)"></app-heatmap-selection>
+    </div>
+</div>
+
 <!-- Alerts -->
 <div class="toast-container position-fixed top-0 end-0 p-3">
     <div class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true"
@@ -63,53 +99,68 @@
                 <p class="text-danger"><strong>Note:</strong> Data persistence is not guaranteed, as live updates are
                     ongoing, also the public API regularly cleans data.</p>
             </div>
-            <button type="button" class="btn-close btn-close-black me-2 m-auto" data-bs-dismiss="toast"
-                aria-label="Close" (click)="saveDismissed()"></button>
+            <button type="button" class="btn-close btn-close-black position-absolute top-0 end-0 m-2"
+                data-bs-dismiss="toast" aria-label="Close" (click)="saveDismissed()"></button>
         </div>
     </div>
 </div>
 
 <!-- Main Content -->
-<div class="container mt-5 pt-4">
+<div class="container-fluid my-5 py-5">
 
     <!-- Information Alert -->
     <div class="alert alert-info" *ngIf="info">
         <strong>Information:</strong> {{ info }}
+        <button type="button" class="btn-close position-absolute end-0 me-3" (click)="info = ''"></button>
     </div>
 
     <!-- Previously Added Channels -->
-    <div class="card bg-dark text-light border-secondary mt-2"
-        *ngIf="!loading && userData === undefined && initiatedChannels.length > 0">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>Previously Added Channels</strong>
-            <button class="btn btn-dark border-secondary" (click)="fetchInitiatedChannels()" title="Refetch Data">
-                <i class="fa-solid fa-rotate-right"></i>
-            </button>
+    <div class="card container bg-dark text-light border-secondary mt-2 p-0"
+        *ngIf="userData === undefined && initiatedChannels.length > 0">
+        <!-- Filter Input for Channels -->
+        <div class="card-header d-flex justify-content-between align-items-center p-0">
+            <div class="input-group">
+                <input type="text"
+                    class="form-control bg-dark border-secondary text-light m-0 rounded-0 border-0 border-bottom rounded-top p-2"
+                    placeholder="Filter channels by name..." [(ngModel)]="channelFilter">
+                <button class="btn btn-dark border-secondary rounded-0 border-0 border-bottom rounded-top" (click)="fetchInitiatedChannels()" title="Refetch Data">
+                    <i class="fa-solid fa-rotate-right" [class.spin]="loading"></i>
+                </button>
+            </div>
         </div>
-
         <div class="table-responsive">
-            <table class="table table-dark table-striped table-bordered m-0">
+            <table class="table table-dark table-borderless table-striped table-hover m-0">
                 <thead>
-                    <tr>
-                        <th scope="col">Thumbnail</th>
+                    <tr class="border-bottom border-secondary">
                         <th scope="col">Channel</th>
-                        <th scope="col">Added</th>
-                        <th scope="col">Messages</th>
+                        <th scope="col" class="text-center">Messages</th>
+                        <th scope="col" class="text-center">Added</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr class="pointer" *ngFor="let channel of initiatedChannels"
-                        (click)="username = channel.channelName; fetchNewData()">
+                <tbody [@listAnimation]="initiatedChannels.length">
+                    <tr class="pointer" *ngFor="let channel of filteredChannels(); trackBy: trackByChannelId"
+                        (click)="username = channel.channelName; fetchNewData()" @moveAnimation>
                         <td>
-                            <img [src]="'https://static-cdn.jtvnw.net/previews-ttv/live_user_' + channel.channelName + '-110x62.jpg'" alt="Channel Thumbnail" />
-                        </td>
-                        <td>
-                            <span class="fw-bold" [ngClass]="{'text-success': channel.isOnline, 'text-danger': !channel.isOnline}">
+                            <div class="position-relative d-inline-block">
+                                <div class="thumbnail-overlay rounded fw-bold">
+                                    <i class="fa-solid fa-clock-rotate-left me-2 overlay-icon"></i>
+                                    <span
+                                        [ngClass]="{'text-success': channel.historyLength > 0, 'text-danger': channel.historyLength <= 0}">
+                                        {{channel.historyLength}}
+                                    </span>
+                                </div>
+                                <img class="rounded" style="width: 110px; height: 62px;"
+                                    [src]="'https://static-cdn.jtvnw.net/previews-ttv/live_user_' + channel.channelName + '-110x62.jpg'"
+                                    alt="Channel Thumbnail" />
+                            </div>
+                            <span class="fw-bold ms-2">
+                                <i class="fa-circle"
+                                    [ngClass]="{'fa-solid text-success': channel.isOnline, 'fa-regular text-danger': !channel.isOnline}"></i>
                                 {{ channel.channelName }}
                             </span>
                         </td>
-                        <td>{{ channel.createdAt | date: 'short' }}</td>
-                        <td>{{ channel.messageCount }}</td>
+                        <td class="text-center align-middle">{{ channel.messageCount }}</td>
+                        <td class="text-center align-middle">{{ getFormattedDateSince(channel.createdAt) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -125,6 +176,6 @@
 
     <!-- User Data Section -->
     <div *ngIf="userData !== undefined">
-        <app-user-section [username]="username" [data]="userData"></app-user-section>
+        <app-user-section [username]="username" [data]="userData" [isOnline]="isOnline"></app-user-section>
     </div>
 </div>

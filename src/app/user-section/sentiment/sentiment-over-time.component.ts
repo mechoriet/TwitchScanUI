@@ -1,9 +1,11 @@
 import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { SentimentOverTime } from '../../models/sentiment.model';
 import { CommonModule } from '@angular/common';
-import { ChartConfiguration } from 'chart.js';
+import { Chart, ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
+import zoomPlugin from 'chartjs-plugin-zoom';
+Chart.register(zoomPlugin);
 
 @Component({
   selector: 'app-sentiment-over-time',
@@ -13,14 +15,18 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
       <h5>Sentiment Over Time (UTC)</h5>
 
       <!-- Line Chart for Sentiment Over Time -->
-      <canvas
-        *ngIf="chartData.datasets[0].data.length > 0"
+      <canvas (dblclick)="resetZoom()"
+        *ngIf="chartData.datasets[0].data.length > 0; else noData"
         baseChart
         [data]="chartData"
         [options]="chartOptions"
         [type]="'line'"
       >
       </canvas>
+
+      <ng-template #noData>
+        <p class="m-0" style="line-height: 400px;">No messages yet.</p>
+      </ng-template>
     </div>
   `,
   styles: [
@@ -57,8 +63,8 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   @Input() data: SentimentOverTime[] = [];
   @Input() redrawTrigger: boolean = false;
-  
-  constructor(private interpolationService: DataInterpolationService) {}
+
+  constructor(private interpolationService: DataInterpolationService) { }
 
   // Chart Data Structure
   chartData: ChartConfiguration<'line'>['data'] = {
@@ -109,6 +115,7 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
 
   // Chart Options
   chartOptions: ChartConfiguration<'line'>['options'] = {
+    aspectRatio: 4,
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -118,6 +125,20 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
       tooltip: {
         enabled: true,
       },
+      zoom: {
+        pan: {
+          enabled: true
+        },
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+
+          pinch: {
+            enabled: true
+          },
+        }
+      }
     },
     scales: {
       x: {
@@ -137,7 +158,6 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
           color: 'rgba(255, 255, 255, 0.1)',
         },
         beginAtZero: true,
-        min: 0,
       },
     },
     animation: {
@@ -154,39 +174,40 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
     this.updateChartData();
   }
 
+  resetZoom(): void {
+    this.chart?.chart?.resetZoom();
+  }
+
   updateChartData(): void {
     if (!this.data || this.data.length === 0) return;
 
     // Sort the input data by time
-    const sortedData = this.data.sort(
-      (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
-    );
+    const data = this.data;
 
     // Prepare raw data for interpolation
-    const rawData = sortedData.map((entry) => ({
+    const rawData = data.map((entry) => ({
       time: entry.time,
       value: entry.averageCompound,
     }));
 
-    // Use the interpolation service to fill missing time intervals
-    const interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000); // 1-minute interval
+    // Set the labels (time) and dataset values for the chart based data
+    this.chartData.labels = rawData.map((entry) =>
+      this.interpolationService.formatTime(new Date(entry.time))
+    );
 
-    // Set the labels (time) and dataset values for the chart based on the interpolated data
-    this.chartData.labels = interpolatedData.map((entry) =>
-      this.interpolationService.formatTime(entry.time)
+    // Populate each dataset with corresponding values
+    this.chartData.datasets[0].data = rawData.map(
+      (_, index) => data[index]?.averagePositive * 100 || 0
     );
-    
-    // Populate each dataset with corresponding interpolated values
-    this.chartData.datasets[0].data = interpolatedData.map(
-      (entry, index) => sortedData[index]?.averagePositive * 100 || 0
+    this.chartData.datasets[1].data = rawData.map(
+      (_, index) => data[index]?.averageNegative * 100 || 0
     );
-    this.chartData.datasets[1].data = interpolatedData.map(
-      (entry, index) => sortedData[index]?.averageNegative * 100 || 0
+    this.chartData.datasets[2].data = rawData.map(
+      (_, index) => data[index]?.averageNeutral * 100 || 0
     );
-    this.chartData.datasets[2].data = interpolatedData.map(
-      (entry, index) => sortedData[index]?.averageNeutral * 100 || 0
+    this.chartData.datasets[3].data = rawData.map(
+      (_, index) => data[index]?.averageCompound * 100 || 0
     );
-    this.chartData.datasets[3].data = interpolatedData.map((entry) => entry.value);
 
     // Update the chart
     this.chart?.chart?.update();

@@ -12,14 +12,18 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
       <h5>Subscriptions Over Time (UTC)</h5>
 
       <!-- Line Chart for Subscriptions Over Time -->
-      <canvas
-        *ngIf="chartData.datasets[0].data.length > 0"
+      <canvas (dblclick)="resetZoom()"
+        *ngIf="chartData.datasets[0].data.length > 0; else noData"
         baseChart
         [data]="chartData"
         [options]="chartOptions"
         [type]="'line'"
       >
       </canvas>
+
+      <ng-template #noData>
+        <p class="m-0" style="line-height: 400px;">No subscriptions yet.</p>
+      </ng-template>
     </div>
   `,
   styles: [
@@ -82,12 +86,25 @@ export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: true,
         labels: { color: 'white' },
       },
       tooltip: {
         enabled: true,
       },
+      zoom: {       
+        pan: {
+          enabled: true
+        },
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+
+          pinch: {
+            enabled: true
+          },
+        }
+      }
     },
     scales: {
       x: {
@@ -123,6 +140,10 @@ export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
 
   ngOnChanges(): void {
     this.updateChartData();
+  }
+
+  resetZoom(): void {
+    this.chart?.chart?.resetZoom();
   }
 
   updateChartData(): void {

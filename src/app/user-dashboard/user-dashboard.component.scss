@@ -9,9 +9,46 @@
     color: #ccc;
 }
 
+.history-container {
+    z-index: 9999;
+    margin-top: 4rem;
+}
+
 input {
     box-shadow: none !important;
     outline: none !important;
+}
+
+table tbody tr {
+    transition: height 300ms ease-in-out, opacity 300ms ease-in-out;
+    overflow: hidden;
+}
+
+table tbody tr.removed {
+    height: 0;
+    opacity: 0;
+}
+
+.home-icon {
+    font-size: 2rem;
+    color: #fff;
+}
+
+.thumbnail-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .overlay-icon {
+        color: #fff;
+        font-size: 1.25rem;
+    }
 }
 
 .demo-alert {
@@ -29,6 +66,15 @@ input {
     box-shadow: 0px 0px 8px -1px rgba(155, 155, 255, 0.8);
 }
 
+.border-glow-transition {
+    transition: all 0.3s ease;
+}
+
+.border-glow {
+    border-bottom: 1px solid #434567 !important;
+    box-shadow: 0px 0px 8px -1px rgba(155, 155, 255, 0.8);
+}
+
 .reload-btn {
     padding-top: 4px;
     font-size: 18px;
@@ -37,15 +83,31 @@ input {
 @mixin width {
     width: auto !important;
 }
+
 table {
     &.table-fit {
         @include width;
         table-layout: auto !important;
+
         thead th,
         tbody td,
         tfoot th,
-        tfoot td  {
+        tfoot td {
             @include width;
         }
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
     }
 }

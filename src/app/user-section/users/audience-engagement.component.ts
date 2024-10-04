@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
 import { UserData } from '../../models/user.model';
 import { BaseChartDirective } from 'ng2-charts';
+import { SubscriptionStatisticComponent } from "./subscription-statistic.component";
 
 @Component({
   selector: 'app-audience-engagement',
@@ -17,20 +18,15 @@ import { BaseChartDirective } from 'ng2-charts';
         aria-expanded="true"
         [attr.aria-controls]="collapseId"
       >
-        <i class="fa-solid fa-users me-2 text-warning"></i> Audience Engagement
+        <i class="fa-solid fa-star me-2 text-warning"></i> Subscriptions
       </h4>
 
-      <div [id]="collapseId" class="collapse">
+      <div [id]="collapseId" class="collapse show">
         <!-- Audience Engagement Stats -->
-        <div class="card border-secondary bg-dark text-light text-center mb-3">
-          <p><strong>Messages:</strong> {{ userData.TotalMessages }}</p>
-          <p>
-            <strong>Average Length:</strong>
-            {{ userData.AverageMessageLength.toFixed(2) }} characters
-          </p>
-        </div>
-
         <div class="row">
+          <ng-container>
+            <app-subscription-statistic [subscription]="userData.SubscriptionStatistic"></app-subscription-statistic>
+          </ng-container>
           <div class="col-12 col-md-6 mb-3">
             <!-- Top Chatters Chart -->
             <div class="card border-secondary bg-dark text-light text-center p-3">
@@ -59,7 +55,7 @@ import { BaseChartDirective } from 'ng2-charts';
               >
               </canvas>
             </div>
-          </div>
+          </div>       
         </div>
       </div>
     </div>
@@ -83,7 +79,7 @@ import { BaseChartDirective } from 'ng2-charts';
       }
     `,
   ],
-  imports: [CommonModule, BaseChartDirective],
+  imports: [CommonModule, BaseChartDirective, SubscriptionStatisticComponent],
 })
 export class AudienceEngagementComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
@@ -199,7 +195,15 @@ export class AudienceEngagementComponent implements OnInit, OnChanges {
       .sort((a, b) => b[1] - a[1]) // Sort descending by frequency
       .slice(0, 10); // Limit to top 10
 
-    this.sentenceFrequencyChartData.labels = sentenceFrequency.map(([sentence]) => sentence);
+    const truncateSentence = (sentence: string, maxLength: number) => {
+      return sentence.length > maxLength ? sentence.substring(0, maxLength) + '...' : sentence;
+    };
+
+    sentenceFrequency.forEach(([sentence, frequency], index) => {
+      sentenceFrequency[index][0] = truncateSentence(sentence, 20);
+    });
+
+    this.sentenceFrequencyChartData.labels = sentenceFrequency.map(([sentence]) => truncateSentence(sentence, 20));
     this.sentenceFrequencyChartData.datasets[0].data = sentenceFrequency.map(([, frequency]) => frequency);
 
     this.chart?.chart?.update();
