@@ -1,0 +1,15 @@
+.info-btn {
+    transition: transform 0.3s ease-in-out;
+}
+
+.info-btn {
+    // Default styles
+
+    &[aria-expanded="true"] {
+        transform: translateY(98%) !important;
+    }
+
+    &[aria-expanded="false"] {
+        transform: translateY(140%) !important;
+    }
+}

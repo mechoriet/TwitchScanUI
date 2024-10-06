@@ -3,17 +3,17 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { SubscriptionStatistic } from '../../models/subscription-model';
+import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 
 @Component({
     selector: 'app-subscription-summary',
     standalone: true,
     template: `
-    <div class="card border-secondary bg-dark text-light text-center">
+    <div class="card border-secondary bg-dark text-light text-center" *ngIf="anySubscriptions()" @fadeInOut>
       <h5>Summary</h5>
 
       <!-- Subscription Summary Chart -->
-      <canvas
-        *ngIf="summaryChartData.datasets[0].data.length > 0"
+      <canvas        
         baseChart
         [data]="summaryChartData"
         [options]="chartOptions"
@@ -36,6 +36,9 @@ import { SubscriptionStatistic } from '../../models/subscription-model';
     `,
     ],
     imports: [CommonModule, BaseChartDirective],
+    animations: [
+        fadeInOut
+    ]
 })
 export class SubscriptionSummaryComponent implements OnInit, OnChanges {
     @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
@@ -124,5 +127,9 @@ export class SubscriptionSummaryComponent implements OnInit, OnChanges {
         ];
 
         this.chart?.chart?.update();
+    }
+
+    anySubscriptions(): boolean {
+        return this.subscription.totalSubscribers > 0;
     }
 }

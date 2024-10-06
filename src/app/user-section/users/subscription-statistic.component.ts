@@ -5,6 +5,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { SubscriptionSummaryComponent } from './subscription-summary.component';
 import { SubscriptionStatistic } from '../../models/subscription-model';
 import { SubscriptionsOverTimeComponent } from "./subscriptions-over-time.component";
+import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 
 @Component({
   selector: 'app-subscription-statistic',
@@ -15,29 +16,24 @@ import { SubscriptionsOverTimeComponent } from "./subscriptions-over-time.compon
             <!-- Subscriptions over time chart -->
              <app-subscriptions-over-time [subscriptions]="subscription.subscriptionsOverTime"></app-subscriptions-over-time>
           </div>
-          <div class="col-12 col-md-6">
+          <div class="col-12" [class.col-md-6]="topSubscribersChartData.datasets[0].data.length > 0" @fadeInOut>
             <!-- Subscription Summary Chart Component -->
             <app-subscription-summary
               [subscription]="subscription"
               [redrawTrigger]="redrawTrigger"
             ></app-subscription-summary>
           </div>
-          <div class="col-12 col-md-6">
+          <div class="col-12 col-md-6" *ngIf="topSubscribersChartData.datasets[0].data.length > 0" @fadeInOut>
             <div class="card border-secondary bg-dark text-light text-center">
               <h5>Top Gifter</h5>
               <!-- Bar Chart for Top Subscribers -->
-              <canvas class="canvas"
-                *ngIf="topSubscribersChartData.datasets[0].data.length > 0; else noData"
+              <canvas class="canvas"                
                 baseChart
                 [data]="topSubscribersChartData"
                 [options]="topSubscribersChartOptions"
                 [type]="'bar'"
               >
               </canvas>
-
-              <ng-template #noData>
-                <p class="canvas m-0" style="line-height: 400px;">No gifted subscriptions yet.</p>
-              </ng-template>
             </div>
           </div>
         </div>
@@ -66,6 +62,9 @@ import { SubscriptionsOverTimeComponent } from "./subscriptions-over-time.compon
     `,
   ],
   imports: [CommonModule, BaseChartDirective, SubscriptionSummaryComponent, SubscriptionsOverTimeComponent],
+  animations: [
+    fadeInOut
+  ] 
 })
 export class SubscriptionStatisticComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;

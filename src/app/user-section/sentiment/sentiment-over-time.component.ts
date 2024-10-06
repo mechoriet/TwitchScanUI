@@ -5,28 +5,24 @@ import { Chart, ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 import zoomPlugin from 'chartjs-plugin-zoom';
+import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 Chart.register(zoomPlugin);
 
 @Component({
   selector: 'app-sentiment-over-time',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center">
+    <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
       <h5>Sentiment Over Time (UTC)</h5>
 
       <!-- Line Chart for Sentiment Over Time -->
-      <canvas (dblclick)="resetZoom()"
-        *ngIf="chartData.datasets[0].data.length > 0; else noData"
+      <canvas (dblclick)="resetZoom()"        
         baseChart
         [data]="chartData"
         [options]="chartOptions"
         [type]="'line'"
       >
       </canvas>
-
-      <ng-template #noData>
-        <p class="m-0" style="line-height: 400px;">No messages yet.</p>
-      </ng-template>
     </div>
   `,
   styles: [
@@ -58,6 +54,9 @@ Chart.register(zoomPlugin);
     `,
   ],
   imports: [CommonModule, BaseChartDirective],
+  animations: [
+    fadeInOut
+  ]
 })
 export class SentimentOverTimeComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;

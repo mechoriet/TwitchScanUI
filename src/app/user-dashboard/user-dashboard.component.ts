@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { InitiatedChannel, UserData } from '../models/user.model';
 import { DataService } from '../services/app-service/data.service';
 import { UserSectionComponent } from '../user-section/user-section.component';
@@ -7,9 +7,13 @@ import { FormsModule } from '@angular/forms';
 import { Result } from '../models/result';
 import { ThumbnailComponent } from "../user-section/users/thumbnail.component";
 import { HistoryTimeline } from '../models/historical.model';
-import { trigger, transition, query, style, stagger, animate } from '@angular/animations';
 import { HeatmapSelectionComponent } from './heatmap-selection/heatmap-selection.component';
-import { getFormattedDateSince } from '../helper/date.helper';
+import { getFormattedDateSince, getTimeSince } from '../helper/date.helper';
+import { moveAnimation, listAnimation, fadeInOut, expandCollapse, fadeInOutSlow, fadeInOutFast, fadeOut } from './user-dashboard.animations';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { NumberAbbreviatorPipe } from '../pipes/number-abbreviator.pipe';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-user-dashboard',
@@ -21,36 +25,22 @@ import { getFormattedDateSince } from '../helper/date.helper';
     CommonModule,
     FormsModule,
     ThumbnailComponent,
-    HeatmapSelectionComponent
+    HeatmapSelectionComponent,
+    DragDropModule,
+    NumberAbbreviatorPipe,
+    RouterModule
   ],
   animations: [
-    trigger('moveAnimation', [
-      transition('void => *', []), // Prevent animation on load
-      transition('* => *', [
-        query(':enter', [
-          style({ opacity: 0, transform: 'translateY(-20px)' }),
-          stagger('100ms', [
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true }),
-        query(':leave', [
-          stagger('100ms', [
-            animate('300ms ease-out', style({ opacity: 0, transform: 'translateY(20px)' }))
-          ])
-        ], { optional: true }),
-        // This will handle the move animation
-        query(':enter, :leave', [
-          style({ position: 'relative' }),
-          animate('300ms ease-out')
-        ], { optional: true }),
-        query(':self', [
-          animate('300ms ease-in-out', style({ transform: 'translateY(0)' }))
-        ], { optional: true })
-      ])
-    ])
+    moveAnimation,
+    listAnimation,
+    fadeOut,
+    fadeInOut,
+    expandCollapse,
+    fadeInOutSlow,
+    fadeInOutFast
   ]
 })
-export class UserDashboardComponent implements OnInit {
+export class UserDashboardComponent implements OnInit, OnDestroy {
   viewCountHistory: HistoryTimeline[] = [];
   initiatedChannels: InitiatedChannel[] = [];
   userData: UserData | undefined;
@@ -62,9 +52,23 @@ export class UserDashboardComponent implements OnInit {
   info: string = '';
   channelFilter: string = '';
 
-  getFormattedDateSince = getFormattedDateSince;
+  private subscriptions: Subscription[] = [];
 
-  constructor(private dataService: DataService) { }
+  getFormattedDateSince = getFormattedDateSince;
+  getTimeSince = getTimeSince;
+
+  constructor(private route: ActivatedRoute, private router: Router, private dataService: DataService) {
+    const routeSubscription = this.route.paramMap.subscribe(params => {
+      const channel = params.get('channel');
+      if (channel) {
+        this.username = channel;
+        this.fetchData();
+      } else {
+        this.fetchInitiatedChannels();
+      }
+    });
+    this.subscriptions.push(routeSubscription);
+  }
 
   saveDismissed(): void {
     this.notDismissed = false;
@@ -72,7 +76,8 @@ export class UserDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.dataService.userDataSubject.subscribe({
+    this.loading = true;
+    const userDataSubscription = this.dataService.userDataSubject.subscribe({
       next: (data) => {
         if (data) {
           this.userData = data;
@@ -86,13 +91,17 @@ export class UserDashboardComponent implements OnInit {
         this.info = 'An error occurred while fetching user data. Please try again later.';
       }
     });
-    this.dataService.onlineStatusSubject.subscribe({
+    this.subscriptions.push(userDataSubscription);
+
+    const onlineStatusSubscription = this.dataService.onlineStatusSubject.subscribe({
       next: (data) => {
         if (data) {
           this.initiatedChannels.forEach((channel) => {
             if (channel.channelName === data.channelName) {
               channel.isOnline = data.isOnline;
               channel.messageCount = data.messageCount;
+              channel.viewerCount = data.viewerCount;
+              channel.uptime = data.uptime;
             }
           });
         }
@@ -101,7 +110,9 @@ export class UserDashboardComponent implements OnInit {
         console.error(err);
       }
     });
-    this.dataService.messageCountSubject.subscribe({
+    this.subscriptions.push(onlineStatusSubscription);
+
+    const messageCountSubscription = this.dataService.messageCountSubject.subscribe({
       next: (data) => {
         this.initiatedChannels.forEach((channel) => {
           if (channel.channelName === data.channelName) {
@@ -114,13 +125,16 @@ export class UserDashboardComponent implements OnInit {
         console.error(err);
       }
     });
-
-    this.fetchInitiatedChannels();
+    this.subscriptions.push(messageCountSubscription);
 
     const dismissed = localStorage.getItem('dismissed');
     if (dismissed) {
       this.notDismissed = false;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   sortInitiatedChannels(): void {
@@ -143,29 +157,26 @@ export class UserDashboardComponent implements OnInit {
 
     this.info = '';
     this.username = this.username.toLowerCase().trim();
-    this.loading = true;
     if (this.lastUsername.length > 0) {
       this.dataService.leaveChannel(this.lastUsername);
       this.lastUsername = '';
     }
-    this.dataService.initUser(this.username).subscribe({
+    const initUserSubscription = this.dataService.initUser(this.username).subscribe({
       next: (data) => {
-        this.loading = false;        
-        // Add to initiated channels
         this.initiatedChannels.push(new InitiatedChannel(this.username));
       },
       error: (err) => {
         if (err.status === 409) {
-          this.fetchData();
+          this.router.navigate([this.username]);
           return;
         }
-        this.loading = false;
         if (err.status === 403) {
           this.info = (err.error as Result<object>).error?.errorMessage ?? 'An error occurred while fetching data. Please try again later.';
           return
         }
       }
     });
+    this.subscriptions.push(initUserSubscription);
   }
 
   isChannelOnline(username: string): boolean {
@@ -173,20 +184,22 @@ export class UserDashboardComponent implements OnInit {
   }
 
   fetchInitiatedChannels(): void {
-    this.dataService.getInitiatedChannels().subscribe({
+    const initiatedChannelsSubscription = this.dataService.getInitiatedChannels().subscribe({
       next: (data) => {
         // First sort by online status, then by message count
+        this.loading = false;
         this.initiatedChannels = data;
         this.sortInitiatedChannels();
       },
       error: (err) => {
+        this.loading = false;
         console.error(err);
       }
     });
+    this.subscriptions.push(initiatedChannelsSubscription);
   }
 
   fetchNewData(): void {
-    this.userData = undefined;
     this.info = '';
     this.initUser();
   }
@@ -200,8 +213,8 @@ export class UserDashboardComponent implements OnInit {
     this.fetchViewCountHistory(target.value);
   }
 
-  fetchViewCountHistory(key: string): void {    
-    this.dataService.getHistoryByKey(this.username, key).subscribe({
+  fetchViewCountHistory(key: string): void {
+    const viewCountHistorySubscription = this.dataService.getHistoryByKey(this.username, key).subscribe({
       next: (data) => {
         this.userData = data.statistics;
         this.loading = false;
@@ -211,6 +224,7 @@ export class UserDashboardComponent implements OnInit {
         this.info = 'An error occurred while fetching data. Please try again later.';
       },
     });
+    this.subscriptions.push(viewCountHistorySubscription);
   }
 
   onHistoryDateSelected(id: string | undefined): void {
@@ -219,11 +233,14 @@ export class UserDashboardComponent implements OnInit {
       return;
     }
 
+    this.dataService.leaveChannel(this.lastUsername);
     this.fetchViewCountHistory(id);
   }
 
   fetchData(): void {
-    this.dataService.getUserData(this.username).subscribe({
+    console.log('Fetching data for', this.username);
+    this.loading = true;
+    const fetchDataSubscription = this.dataService.getUserData(this.username).subscribe({
       next: (data) => {
         if (!this.userData) {
           this.lastUsername = this.username;
@@ -238,10 +255,11 @@ export class UserDashboardComponent implements OnInit {
         this.info = 'An error occurred while fetching data. Please try again later.';
       },
     });
+    this.subscriptions.push(fetchDataSubscription);
   }
 
   fetchHistory() {
-    this.dataService.getViewCountHistory(this.username).subscribe({
+    const historySubscription = this.dataService.getViewCountHistory(this.username).subscribe({
       next: (data) => {
         this.viewCountHistory = data;
       },
@@ -249,6 +267,7 @@ export class UserDashboardComponent implements OnInit {
         console.error(error);
       }
     });
+    this.subscriptions.push(historySubscription);
   }
 
   filteredChannels() {
@@ -260,41 +279,20 @@ export class UserDashboardComponent implements OnInit {
     );
   }
 
-  exportToJSON(): void {
-    if (this.userData) {
-      const dataStr = JSON.stringify(this.userData, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-      const exportFileDefaultName = 'user-data.json';
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
-    }
-  }
-
-  collapseAll() {
-    const collapses = document.querySelectorAll('.collapse');
-    collapses.forEach((collapse: any) => {
-      if (collapse.classList.contains('show')) {
-        collapse.classList.remove('show');
-      } else {
-        collapse.classList.add('show');
-      }
-    });
-  }
-
   trackByChannelId(index: number, item: InitiatedChannel) {
     return item.channelName;
   }
 
   reset(): void {
+    this.dataService.leaveChannel(this.lastUsername);
+    this.router.navigate(['']);
+    this.fetchInitiatedChannels();
+
     this.userData = undefined;
     this.viewCountHistory = [];
     this.username = '';
     this.info = '';
     this.loading = false;
     this.isOnline = false;
-    this.fetchInitiatedChannels();
-    this.dataService.leaveChannel(this.lastUsername);
   }
 }

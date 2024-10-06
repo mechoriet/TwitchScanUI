@@ -1,4 +1,10 @@
-/* You can add global styles to this file, and also import other style files */
+@font-face {
+  font-family: 'MainFont';
+  src: url('assets/fonts/main_font.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 * {
   font-family: 'Roboto', sans-serif;
 }
@@ -11,4 +17,21 @@ body {
 
 .pointer {
   cursor: pointer;
+}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.text-muted {
+  color: rgba(255,255,255, .15) !important
+}
+
+.top-index {
+    z-index: 9999;
+}
+
+h5 {
+  font-size: 1.25rem !important;
+  font-weight: 500;
+  font-family: 'Roboto', sans-serif;
+  margin: 0 !important;
 }

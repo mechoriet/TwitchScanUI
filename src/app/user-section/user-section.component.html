@@ -1,3 +1,16 @@
+<!-- Channel Info -->
+<div class="position-fixed top-0 start-50 translate-middle-x top-index info-container">
+  <button
+    class="btn btn-dark info-btn top-index border-secondary rounded-0 border-0 border-bottom border-end border-start rounded-bottom position-absolute bottom-0 start-50 translate-middle-x"
+    type="button" data-bs-toggle="collapse" data-bs-target="#channelInfo" aria-expanded="false"
+    aria-controls="channelInfo">
+    <i class="fa-solid fa-info-circle text-warning"></i>
+  </button>
+  <div id="channelInfo" class="collapse">
+    <app-channel-info [userData]="data"></app-channel-info>
+  </div>
+</div>
+
 <div class="user-section">
   <div class="row">
     <!-- Sentiment Analysis -->
@@ -14,7 +27,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- Alerts -->
 <div class="toast-container position-fixed top-50 start-50 translate-middle">

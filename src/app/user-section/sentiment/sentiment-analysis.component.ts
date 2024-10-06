@@ -6,18 +6,19 @@ import { CommonModule } from '@angular/common';
 import { TopMessagesComponent } from "./top-messages.componen";
 import { UserData } from '../../models/user.model';
 import { EmoteUsageComponent } from "../message/emote-usage.component";
+import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 
 @Component({
   selector: 'app-sentiment-analysis',
   standalone: true,
   template: `
     <div class="card border-secondary bg-dark text-light">
-      <h4 (click)="redrawTrigger = !redrawTrigger"
+      <h5 (click)="redrawTrigger = !redrawTrigger"
       class="pointer"
       data-bs-toggle="collapse"
       data-bs-target="#sentimentAnalysisCollapse"
       aria-expanded="true"
-      aria-controls="sentimentAnalysisCollapse"><i class="fa-solid fa-magnifying-glass-chart me-2 text-warning"></i> Sentiment</h4>
+      aria-controls="sentimentAnalysisCollapse"><i class="fa-solid fa-magnifying-glass-chart me-2 text-warning"></i> Sentiment</h5>
 
       <div id="sentimentAnalysisCollapse" class="collapse show">
         <app-sentiment-over-time
@@ -25,8 +26,8 @@ import { EmoteUsageComponent } from "../message/emote-usage.component";
           [redrawTrigger]="redrawTrigger"
         ></app-sentiment-over-time>
         <div class="row">
-          <div class="col-12 col-md-6">
-            <ng-container *ngIf="hasPositiveUsers()">
+          <div *ngIf="hasPositiveUsers()" class="col-12 col-md-6" @fadeInOut>
+            <ng-container>
               <app-top-users
                 class="mb-2"
                 [title]="titlePositive"
@@ -36,8 +37,8 @@ import { EmoteUsageComponent } from "../message/emote-usage.component";
               ></app-top-users>
             </ng-container>
           </div>
-          <div class="col-12 col-md-6">
-            <ng-container *ngIf="hasNegativeUsers()">
+          <div *ngIf="hasNegativeUsers()" class="col-12 col-md-6" @fadeInOut>
+            <ng-container>
               <app-top-users
                 [title]="titleNegative"
                 [users]="userData.SentimentAnalysis.topNegativeUsers"
@@ -47,8 +48,8 @@ import { EmoteUsageComponent } from "../message/emote-usage.component";
             </ng-container>
           </div>          
           <!-- Emote Usage -->
-          <div class="col-12">
-            <ng-container *ngIf="userData.EmoteUsage.length>0">
+          <div *ngIf="userData.EmoteUsage.length>0" class="col-12" @fadeInOut>
+            <ng-container>
               <app-emote-usage [emotes]="userData.EmoteUsage"></app-emote-usage>
             </ng-container>
           </div>
@@ -66,6 +67,9 @@ import { EmoteUsageComponent } from "../message/emote-usage.component";
     `,
   ],
   imports: [SentimentOverTimeComponent, TopUsersComponent, CommonModule, TopMessagesComponent, EmoteUsageComponent],
+  animations: [
+    fadeInOut
+  ] 
 })
 export class SentimentAnalysisComponent {
   @Input({required: true}) userData!: UserData;

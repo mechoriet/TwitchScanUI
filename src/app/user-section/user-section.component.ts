@@ -7,9 +7,10 @@ import { SentimentOverTimeComponent } from './sentiment/sentiment-over-time.comp
 import { SubscriptionStatisticComponent } from './users/subscription-statistic.component';
 import { TopUsersComponent } from './sentiment/top-users.component';
 import { CommonModule } from '@angular/common';
-import { PeakActivityPeriodsComponent } from './users/peak-activity-periods.component';
+import { ActivityComponent } from './users/activity.component';
 import { AudienceEngagementComponent } from './users/audience-engagement.component';
 import { ChannelMetricsComponent } from "./users/channel-metric.component";
+import { ChannelInfoComponent } from './users/channel-info.component';
 
 @Component({
   selector: 'app-user-section',
@@ -21,10 +22,11 @@ import { ChannelMetricsComponent } from "./users/channel-metric.component";
     SentimentAnalysisComponent,
     SentimentOverTimeComponent,
     TopUsersComponent,
-    PeakActivityPeriodsComponent,
+    ActivityComponent,
     AudienceEngagementComponent,
     CommonModule,
-    ChannelMetricsComponent
+    ChannelMetricsComponent,
+    ChannelInfoComponent
 ],
   templateUrl: './user-section.component.html',
   styleUrl: './user-section.component.scss'

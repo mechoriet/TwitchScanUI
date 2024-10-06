@@ -2,19 +2,29 @@ import { EmoteUsage } from "./emote.model";
 import { SentimentAnalysis } from "./sentiment.model";
 import { SubscriptionStatistic } from "./subscription-model";
 
+export enum ViewerTrend {
+  Increasing,
+  Decreasing,
+  Stable
+}
+
 export class InitiatedChannel {
   channelName: string;
   messageCount: number;
+  viewerCount: number;
   createdAt: string;
   isOnline: boolean;
   historyLength: number;
+  uptime: string | undefined;
 
   constructor(channelName: string) {
     this.channelName = channelName;
     this.messageCount = 0;
+    this.viewerCount = 0;
     this.createdAt = new Date().toISOString();
     this.isOnline = false;
     this.historyLength = 0;
+
   }
 }
 
@@ -22,6 +32,8 @@ export interface ChannelStatus {
   channelName: string;
   isOnline: boolean;
   messageCount: number;
+  viewerCount: number;
+  uptime: string | undefined;
 }
 
 export interface ChannelMessageCount {
@@ -34,6 +46,8 @@ export interface ChannelMetrics {
   currentGame: string;
   uptime: string;
   viewersOverTime: { [key: string]: number };
+  totalWatchTime: number;
+  trend: ViewerTrend;
 }
 
 export interface ViewerStatistics {
@@ -48,7 +62,7 @@ export interface UserData {
   HostEvents: number;
   LinksShared: number;
   MessageIntervalMs: number;
-  PeakActivityPeriods: { [key: string]: number };
+  PeakActivityPeriods: PeakActivityPeriod;
   RaidEvents: number;
   SentenceFrequency: { [key: string]: number };
   SentimentAnalysis: SentimentAnalysis;
@@ -61,6 +75,14 @@ export interface UserData {
   UniqueWords: number;
   WordFrequency: { [key: string]: number };
   ChannelMetrics: ChannelMetrics;
+  IsOnline: boolean;
+}
+
+export interface PeakActivityPeriod {
+  messagesOverTime: { [key: string]: number };
+  subOnlyMessagesOverTime: { [key: string]: number };
+  emoteOnlyMessagesOverTime: { [key: string]: number };
+  slowModeMessagesOverTime: { [key: string]: number };
 }
 
 export interface TotalBans {

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { UserDashboardComponent } from './user-dashboard/user-dashboard.component';
 
 @Component({
@@ -11,4 +11,6 @@ import { UserDashboardComponent } from './user-dashboard/user-dashboard.componen
 })
 export class AppComponent {
   title = 'twitch-scan';
+
+  constructor() {}
 }

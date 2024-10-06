@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HistoryTimeline } from '../../models/historical.model';
@@ -7,117 +7,165 @@ import { HistoryTimeline } from '../../models/historical.model';
   selector: 'app-heatmap-selection',
   standalone: true,
   template: `
-    <div class="heatmap-container p-2">
-      <div *ngFor="let week of heatmap" class="week">
-        <div *ngFor="let day of week"
-          class="day border-secondary"
-          [ngStyle]="{'background-color': getColor(day)}"
-          (click)="onDayClick(day)"
-          [attr.title]="formatDate(day)"
-        ></div>
+    <div class="year-selection">
+      <button class="btn border-0" (click)="changeYear(-1)"><i class="fas fa-chevron-left text-light"></i></button>
+      <span class="year-label text-light pointer" (click)="resetYear()">{{ selectedYear }}</span>
+      <button class="btn border-0" (click)="changeYear(1)"><i class="fas fa-chevron-right text-light"></i></button>
+    </div>
+    <i
+      class="fas fa-info-circle text-light ms-2 position-absolute"
+      data-toggle="tooltip"
+      data-placement="top"
+      title="Hover over days to see stream information. Click on a day to view the stream details. Return to current year by clicking on the year label."
+    ></i>
+    <div class="heatmap-container position-relative">
+      <div class="week-header">
+        <div class="corner-cell"></div>
+        <div *ngFor="let week of heatmap; let i = index" class="week-number text-muted">
+          {{ i + 1 }}
+        </div>
+      </div>
+      <div *ngFor="let day of daysOfWeek; let i = index" class="day-row">
+        <div class="day-label text-muted">{{ day.substring(0,2) }}</div>
+        <div *ngFor="let week of heatmap" class="day border-secondary"
+             [ngStyle]="{ 'background-color': getColor(week[i]) }"
+             (click)="onDayClick(week[i])"
+             [attr.title]="formatDate(week[i])">
+        </div>
       </div>
     </div>
+    <button *ngIf="isHistorySelected" class="btn btn-outline-secondary position-absolute top-0 end-0 m-2" (click)="unselectHistory()"><i class="fas fa-rotate-left"></i></button>
   `,
-  styleUrl: './heatmap-selection.component.scss',
+  styleUrls: ['./heatmap-selection.component.scss'],
   imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HeatmapSelectionComponent implements OnInit {
+export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() timelines: HistoryTimeline[] = [];
   @Output() idSelected = new EventEmitter<string | undefined>();
+  isHistorySelected: boolean = false;
 
   heatmap: Array<Array<HistoryTimeline | string>> = [];
+  daysOfWeek: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  selectedYear: number = new Date().getUTCFullYear();
 
   ngOnInit(): void {
     this.generateHeatmap();
   }
 
+  ngAfterViewInit(): void {
+    document.addEventListener('click', this.onDocumentClick.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('click', this.onDocumentClick.bind(this));
+  }
+
+  onDocumentClick(event: MouseEvent): void {
+    const collapseElement = document.getElementById('viewCountHistory');
+    if (collapseElement && !collapseElement.contains(event.target as Node)) {
+      (collapseElement as HTMLElement).classList.remove('show');
+    }
+  }
+
+  changeYear(delta: number): void {
+    this.selectedYear += delta;    
+    this.generateHeatmap();
+  }
+
+  resetYear(): void {
+    this.selectedYear = new Date().getUTCFullYear();
+    this.generateHeatmap();
+  }
+
   generateHeatmap(): void {
     const weeks: Array<Array<HistoryTimeline | string>> = [];
-    const daysInWeek = 7;
-    const year = new Date().getUTCFullYear();
+    const year = this.selectedYear;
     const janFirst = new Date(Date.UTC(year, 0, 1));
+    const decLast = new Date(Date.UTC(year, 11, 31));
 
-    let currentDate = janFirst;
-    let currentWeek: Array<HistoryTimeline | string> = [];
+    let currentDate = new Date(janFirst);
+    let currentWeek: Array<HistoryTimeline | string> = new Array(janFirst.getUTCDay()).fill('');
 
-    // Pre-fill the first week with empty slots before Jan 1
-    let dayOfWeek = janFirst.getUTCDay(); // Get the day of the week of Jan 1 (Monday = 1)
-    for (let i = 0; i < dayOfWeek; i++) {
-      currentWeek[i] = ''; // Fill with empty slots until Jan 1st
-    }
-
-    // Loop through all days in the year, accounting for leap years
-    while (currentDate.getUTCFullYear() === year) {
-      const dayOfWeek = currentDate.getUTCDay(); // Get day of the week (Sunday = 0, Monday = 1, etc.)
-
-      // Add the current day as a string to the week
+    // Fill in all days of the selected year
+    while (currentDate <= decLast) {
+      const dayOfWeek = currentDate.getUTCDay();
       currentWeek[dayOfWeek] = currentDate.toDateString();
 
-      // If it's the end of the week, push the current week to the weeks array and start a new week
       if (dayOfWeek === 6) {
         weeks.push(currentWeek);
         currentWeek = [];
       }
 
-      // Move to the next day
-      currentDate = new Date(Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate() + 1));
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
-    // Push the last week if it wasn't completed (i.e., the last days of the year)
+    // Push the last week if it wasn't completed
     if (currentWeek.length > 0) {
       weeks.push(currentWeek);
     }
 
-    // Populate the heatmap with actual timeline data
+    // Fill in the first week to complete the calendar (days before Jan 1)
+    if (weeks.length > 0 && weeks[0].length < 7) {
+      weeks[0] = [...new Array(7 - weeks[0].length).fill(''), ...weeks[0]];
+    }
+
+    // Populate heatmap with actual timeline data
     this.timelines.forEach((timeline) => {
       const date = new Date(timeline.time);
-      const weekOfYear = this.getWeekOfYear(date); // Get the week of the year
-      const dayOfWeek = date.getUTCDay(); // Sunday = 0, Monday = 1, etc.
+      if (date.getUTCFullYear() === year) {
+        const weekOfYear = this.getWeekOfYear(date);
+        const dayOfWeek = date.getUTCDay();
 
-      if (weekOfYear < weeks.length) { // Ensure we don't exceed array bounds
-        weeks[weekOfYear][dayOfWeek] = timeline;
+        if (weekOfYear < weeks.length) {
+          weeks[weekOfYear][dayOfWeek] = timeline;
+        }
       }
     });
 
-    console.log(weeks);
     this.heatmap = weeks;
   }
 
   getWeekOfYear(date: Date): number {
     const startOfYear = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const dayOfYear = ((date.getTime() - startOfYear.getTime()) / 86400000) + startOfYear.getUTCDay();
+    const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / 86400000) + startOfYear.getUTCDay();
     return Math.floor(dayOfYear / 7);
   }
 
-  getColor(averageViewers: HistoryTimeline | string): string {
-    if (typeof averageViewers === 'string' || averageViewers === undefined || averageViewers === null || (averageViewers as HistoryTimeline).averageViewers === 0) {
-      return `rgb(28, 28, 28)`;  // Default dark color for no viewers or invalid input
+  getColor(day: HistoryTimeline | string): string {
+    if (typeof day === 'string' || day === undefined) {
+      return `rgb(28, 28, 28)`;
     }
-    // Define min and max viewers for scaling
-    const minViewers = 0;
-    const maxViewers = this.timelines.reduce((max, timeline) => Math.max(max, timeline.peakViewers), 0);
 
-    // Calculate the color intensity based on the number of viewers
-    const intensity = ((averageViewers as HistoryTimeline).averageViewers - minViewers) / (maxViewers - minViewers);
+    const averageViewers = day.averageViewers;
+    if (averageViewers === 0) {
+      return `rgb(28, 28, 28)`;
+    }
+
+    const maxViewers = Math.max(...this.timelines.map(t => t.peakViewers));
+    const intensity = (averageViewers - 0) / (maxViewers - 0);
     const greenIntensity = Math.floor(intensity * 255);
 
-    return `rgba(28, ${greenIntensity}, 28, .8)`;  // Green color scaling with intensity
+    return `rgba(28, ${greenIntensity}, 28, .8)`;
   }
 
   onDayClick(day: HistoryTimeline | string): void {
-    if (typeof day === 'string') {
-      return;
+    if (typeof day !== 'string') {
+      this.idSelected.emit(day.id);
+      this.isHistorySelected = true;
     }
-
-    this.idSelected.emit((day as HistoryTimeline).id);
   }
 
-  formatDate(value: HistoryTimeline | String): string {
-    if (typeof value === 'string') {
-      return new Date(value as string).toDateString();
+  unselectHistory(): void {
+    this.isHistorySelected = false;
+    this.idSelected.emit(undefined);
+  }
+
+  formatDate(day: HistoryTimeline | string): string {
+    if (typeof day === 'string' || day === undefined) {
+      return day ? new Date(day).toDateString() : 'Invalid Date';
     }
 
-    const timeLine = (value as HistoryTimeline);
-    return new Date(timeLine.time).toDateString() + '\n' + timeLine.averageViewers + ' viewers';
+    return `${new Date(day.time).toDateString()}\n${day.averageViewers} viewers`;
   }
 }

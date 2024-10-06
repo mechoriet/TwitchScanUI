@@ -21,3 +21,14 @@ export function getFormattedDateSince(date: string): string {
 
     return timeParts.length > 0 ? `${timeParts.join(' ')} ago` : 'Just now';
   }
+
+  export function getTimeSince(date: string): string {
+    const now = new Date();
+    const diff = now.getTime() - new Date(date).getTime();
+
+    // Parse difference as 'hh:mm:ss' format with leading zeros
+    const hours = Math.floor(diff / 3600000).toString().padStart(2, '0');
+    const minutes = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+
+    return `${hours}:${minutes}`;
+  }

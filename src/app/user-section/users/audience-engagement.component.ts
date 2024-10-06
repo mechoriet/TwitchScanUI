@@ -4,13 +4,14 @@ import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
 import { UserData } from '../../models/user.model';
 import { BaseChartDirective } from 'ng2-charts';
 import { SubscriptionStatisticComponent } from "./subscription-statistic.component";
+import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 
 @Component({
   selector: 'app-audience-engagement',
   standalone: true,
   template: `
     <div class="card border-secondary bg-dark text-light p-3">
-      <h4
+      <h5
         (click)="toggleCollapse()"
         class="pointer"
         data-bs-toggle="collapse"
@@ -18,8 +19,8 @@ import { SubscriptionStatisticComponent } from "./subscription-statistic.compone
         aria-expanded="true"
         [attr.aria-controls]="collapseId"
       >
-        <i class="fa-solid fa-star me-2 text-warning"></i> Subscriptions
-      </h4>
+        <i class="fa-solid fa-star me-2 text-warning"></i> Engagement
+      </h5>
 
       <div [id]="collapseId" class="collapse show">
         <!-- Audience Engagement Stats -->
@@ -27,12 +28,11 @@ import { SubscriptionStatisticComponent } from "./subscription-statistic.compone
           <ng-container>
             <app-subscription-statistic [subscription]="userData.SubscriptionStatistic"></app-subscription-statistic>
           </ng-container>
-          <div class="col-12 col-md-6 mb-3">
+          <div class="col-12" [class.col-md-6]="sentenceFrequencyChartData.datasets[0].data.length > 0" @fadeInOut>
             <!-- Top Chatters Chart -->
-            <div class="card border-secondary bg-dark text-light text-center p-3">
+            <div class="card border-secondary bg-dark text-light text-center p-3" *ngIf="topChattersChartData.datasets[0].data.length > 0" @fadeInOut>
               <h5>Top Chatters</h5>
-              <canvas
-                *ngIf="topChattersChartData.datasets[0].data.length > 0"
+              <canvas                
                 baseChart
                 [data]="topChattersChartData"
                 [options]="barChartOptions"
@@ -42,12 +42,11 @@ import { SubscriptionStatisticComponent } from "./subscription-statistic.compone
             </div>
           </div>
 
-          <div class="col-12 col-md-6 mb-3">
+          <div class="col-12 col-md-6" *ngIf="sentenceFrequencyChartData.datasets[0].data.length > 0" @fadeInOut>
             <!-- Sentence Frequency Chart -->
             <div class="card border-secondary bg-dark text-light text-center p-3">
               <h5>Sentence Frequency</h5>
-              <canvas
-                *ngIf="sentenceFrequencyChartData.datasets[0].data.length > 0"
+              <canvas                
                 baseChart
                 [data]="sentenceFrequencyChartData"
                 [options]="barChartOptions"
@@ -80,6 +79,9 @@ import { SubscriptionStatisticComponent } from "./subscription-statistic.compone
     `,
   ],
   imports: [CommonModule, BaseChartDirective, SubscriptionStatisticComponent],
+  animations: [
+    fadeInOut
+  ] 
 })
 export class AudienceEngagementComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;

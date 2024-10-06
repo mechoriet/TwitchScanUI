@@ -3,27 +3,23 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
+import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 
 @Component({
   selector: 'app-subscriptions-over-time',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center">
+    <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
       <h5>Subscriptions Over Time (UTC)</h5>
 
       <!-- Line Chart for Subscriptions Over Time -->
-      <canvas (dblclick)="resetZoom()"
-        *ngIf="chartData.datasets[0].data.length > 0; else noData"
+      <canvas (dblclick)="resetZoom()"        
         baseChart
         [data]="chartData"
         [options]="chartOptions"
         [type]="'line'"
       >
       </canvas>
-
-      <ng-template #noData>
-        <p class="m-0" style="line-height: 400px;">No subscriptions yet.</p>
-      </ng-template>
     </div>
   `,
   styles: [
@@ -55,6 +51,9 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
     `,
   ],
   imports: [CommonModule, BaseChartDirective],
+  animations: [
+    fadeInOut
+  ]
 })
 export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;

@@ -1,20 +1,60 @@
 .heatmap-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  .week {
-    display: flex;
-    flex-direction: column;
-  }
-  .day {
-    width: 20px;
-    height: 20px;
-    margin: 1px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .day:hover {
-    opacity: 0.7;
-  }
+  display: flex;
+  flex-direction: column;
+}
+
+.week-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.corner-cell {
+  width: 40px;
+}
+
+.week-number {
+  width: 16px;
+  height: 16px;
+  margin: 1px;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.day-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.day-label {
+  width: 40px;
+  font-weight: bold;
+  text-align: right;
+  padding-right: 5px;
+  font-size: .75rem;
+}
+
+.day {
+  width: 16px;
+  height: 16px;
+  margin: 1px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.day:hover {
+  opacity: 0.7;
+}
+
+.year-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.year-label {
+  font-weight: bold;
+  margin: 0 10px;
+}

@@ -9,9 +9,9 @@ import { BaseChartDirective } from 'ng2-charts';
   standalone: true,
   template: `
     <div class="card bg-dark border-secondary text-light">
-      <h4 (click)="updateChartData()"
+      <h5 (click)="updateChartData()"
       class="pointer">
-      <i class="fa-solid fa-face-grin-tongue-wink me-2 text-warning"></i> Emotes</h4>
+      <i class="fa-solid fa-face-grin-tongue-wink me-2 text-warning"></i> Emotes</h5>
       <div id="emoteCollapse">
         <div class="card border-secondary bg-dark text-light text-center">     
           <h5>Emote Usage</h5>   

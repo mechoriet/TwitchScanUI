@@ -126,7 +126,7 @@ export class ThumbnailComponent implements OnInit {
         var timeString = new Date().toUTCString();
         this.imageBlobMap.set(timeString, this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(blob)));
         if (this.imageBlobMap.size > this.imagesToKeep) {
-          this.imageBlobMap.delete(this.imageBlobMap.keys().next().value);
+          this.imageBlobMap.delete(this.imageBlobMap.keys().next().value ?? '');
         }
       })
       .catch((error) => {

@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChannelMetrics } from '../../models/user.model';
+import { ChannelMetrics, ViewerTrend } from '../../models/user.model';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 
 @Component({
@@ -10,15 +10,32 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
   standalone: true,
   template: `
     <div>
-      <div class="card border-secondary bg-dark text-light chart-container text-center">
-        <h5>Viewers Over Time (UTC)</h5>
-        <canvas (dblclick)="resetZoom()"
+      <div
+        class="card border-secondary bg-dark text-light chart-container text-center"
+      >
+        <h5>
+          Viewers Over Time (UTC)
+          <i
+            class="fa-solid"
+            [ngClass]="{
+              'trend-stable fa-minus':
+                metrics.trend === ViewerTrend.Stable,
+              'trend-up fa-arrow-up':
+                metrics.trend === ViewerTrend.Increasing,
+              'trend-down fa-arrow-down':
+                metrics.trend === ViewerTrend.Decreasing
+            }"
+          ></i>
+        </h5>
+        <canvas
+          (dblclick)="resetZoom()"
           *ngIf="chartData.datasets[0].data.length > 0"
           baseChart
           [data]="chartData"
           [options]="chartOptions"
           [type]="'line'"
         ></canvas>
+        <small class="text-muted">{{ metrics.totalWatchTime | number: '1.1-1' }}h watchtime</small>
       </div>
     </div>
   `,
@@ -36,6 +53,15 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
       .pointer {
         cursor: pointer;
       }
+      .trend-stable {
+        color: rgba(255, 168, 57, 0.5);
+      }
+      .trend-up {
+        color: #00ff00;
+      }
+      .trend-down {
+        color: #ff0000;
+      }
     `,
   ],
   imports: [CommonModule, BaseChartDirective],
@@ -44,7 +70,9 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   @Input({ required: true }) metrics!: ChannelMetrics;
 
-  constructor(private interpolationService: DataInterpolationService) {}
+  ViewerTrend = ViewerTrend;
+
+  constructor(private interpolationService: DataInterpolationService) { }
 
   // Chart Data Structure
   chartData: ChartConfiguration<'line'>['data'] = {
@@ -66,7 +94,7 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
   // Chart Options
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
-    maintainAspectRatio: false,    
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         labels: { color: 'white' },
@@ -74,9 +102,9 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
       tooltip: {
         enabled: true,
       },
-      zoom: {       
+      zoom: {
         pan: {
-          enabled: true
+          enabled: true,
         },
         zoom: {
           wheel: {
@@ -84,10 +112,10 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
           },
 
           pinch: {
-            enabled: true
+            enabled: true,
           },
-        }
-      }
+        },
+      },
     },
     scales: {
       x: {
@@ -133,11 +161,18 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
     }));
 
     // Use the interpolation service to fill in missing intervals
-    const interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000); // 1-minute interval
+    const interpolatedData = this.interpolationService.interpolateData(
+      rawData,
+      60 * 1000
+    ); // 1-minute interval
 
     // Update chart data with interpolated results
-    this.chartData.labels = interpolatedData.map((entry) => this.interpolationService.formatTime(entry.time));
-    this.chartData.datasets[0].data = interpolatedData.map((entry) => entry.value);
+    this.chartData.labels = interpolatedData.map((entry) =>
+      this.interpolationService.formatTime(entry.time)
+    );
+    this.chartData.datasets[0].data = interpolatedData.map(
+      (entry) => entry.value
+    );
 
     // Update the chart
     this.chart?.chart?.update();

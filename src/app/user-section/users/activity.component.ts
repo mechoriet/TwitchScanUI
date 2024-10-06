@@ -3,70 +3,37 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { ThumbnailComponent } from './thumbnail.component';
-import { ChannelMetrics, UserData } from '../../models/user.model';
+import { UserData } from '../../models/user.model';
 import { ChannelMetricsComponent } from './channel-metric.component';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
+import { getTimeSince } from '../../helper/date.helper';
+import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 
 @Component({
   selector: 'app-peak-activity-periods',
   standalone: true,
   template: `
     <div class="card border-secondary bg-dark text-light">
-      <h4 (click)="updateChartData()"
+      <h5 (click)="updateChartData()"
         class="pointer"
         data-bs-toggle="collapse"
         data-bs-target="#peakActivityCollapse"
         aria-expanded="true"
         aria-controls="peakActivityCollapse">
-        <i class="fa-solid fa-clock me-2 text-warning"></i> Activity
-      </h4>
+        <i class="fa-solid fa-comments me-2 text-warning"></i> Activity
+      </h5>
       <div id="peakActivityCollapse" class="collapse show">        
         <!-- Chart -->
-        <div class="card border-secondary bg-dark text-light text-center">
+        <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
           <h5>Messages over time (UTC)</h5>
-          <canvas (dblclick)="resetZoom()"
-            *ngIf="chartData.datasets[0].data.length > 0; else noData"
+          <canvas (dblclick)="resetZoom()"            
             baseChart
             [data]="chartData"
             [options]="chartOptions"
             [type]="'line'"
           >
           </canvas>
-          <ng-template #noData>
-            <p class="m-0" style="line-height: 400px;">No messages yet.</p>
-          </ng-template>
         </div> 
-        <!-- Messages -->
-        <div class="card col-12 border-secondary bg-dark text-light text-center mb-3">
-            <p><strong class="text-warning">Messages:</strong> {{ userData.TotalMessages }}</p>
-            <p>
-              <strong class="text-warning">Average Length:</strong>
-              {{ userData.AverageMessageLength.toFixed(2) }} characters
-            </p>
-        </div>  
-        <!-- Channel Info -->
-        <div class="card border-secondary bg-dark text-light p-3">
-          <table class="table table-dark table-borderless text-light">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Uptime</th>
-                <th>Current</th>
-                <th>Average</th>
-                <th>Peak</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{{ userData.ChannelMetrics.currentGame }}</td>
-                <td>{{ formatUptime(userData.ChannelMetrics.uptime) }}</td>
-                <td><span class="badge bg-primary">{{ userData.ChannelMetrics.viewerStatistics.currentViewers }}</span></td>
-                <td><span class="badge bg-success">{{ formatAverageViewers(userData.ChannelMetrics.viewerStatistics.averageViewers) }}</span></td>
-                <td><span class="badge bg-danger">{{ userData.ChannelMetrics.viewerStatistics.peakViewers }}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
         <!-- Channel Metrics -->
         <app-channel-metrics [metrics]="userData.ChannelMetrics"></app-channel-metrics>
         <!-- Thumbnail -->
@@ -91,16 +58,19 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
     `,
   ],
   imports: [CommonModule, BaseChartDirective, ThumbnailComponent, ChannelMetricsComponent],
+  animations: [
+    fadeInOut
+  ]
 })
-export class PeakActivityPeriodsComponent implements OnInit, OnChanges {
+export class ActivityComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   @Input({ required: true }) userData!: UserData;
   @Input({ required: true }) username: string = '';
 
-  // Inject the DataInterpolationService
+  getTimeSince = getTimeSince;
+
   constructor(private dataInterpolationService: DataInterpolationService) { }
 
-  // Chart Data Structure
   chartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [
@@ -114,10 +84,39 @@ export class PeakActivityPeriodsComponent implements OnInit, OnChanges {
         pointRadius: 0,
         pointHitRadius: 10,
       },
+      {
+        label: 'Sub Only Messages',
+        data: [],
+        fill: true,
+        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+        borderColor: 'rgba(255, 159, 64, 1)',
+        tension: 0.3,
+        pointRadius: 0,
+        pointHitRadius: 10,
+      },
+      {
+        label: 'Emote Only Messages',
+        data: [],
+        fill: true,
+        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+        borderColor: 'rgba(153, 102, 255, 1)',
+        tension: 0.3,
+        pointRadius: 0,
+        pointHitRadius: 10,
+      },
+      {
+        label: 'Slow Mode Messages',
+        data: [],
+        fill: true,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        tension: 0.3,
+        pointRadius: 0,
+        pointHitRadius: 10,
+      },
     ],
   };
 
-  // Chart Options
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -136,7 +135,6 @@ export class PeakActivityPeriodsComponent implements OnInit, OnChanges {
           wheel: {
             enabled: true,
           },
-
           pinch: {
             enabled: true
           },
@@ -184,27 +182,62 @@ export class PeakActivityPeriodsComponent implements OnInit, OnChanges {
   }
 
   updateChartData(): void {
-    // Prepare the data for interpolation
-    const rawData = Object.keys(this.userData.PeakActivityPeriods).map(time => ({
-      time,
-      value: this.userData.PeakActivityPeriods[time],
-    }));
+    const peakActivity = this.userData.PeakActivityPeriods;
 
-    // Interpolate the data (e.g., with a 1-minute interval)
-    const intervalMs = 60 * 1000; // 1 minute
-    const interpolatedData = this.dataInterpolationService.interpolateData(rawData, intervalMs);
+    // Collect all unique timestamps from all datasets
+    const allTimestamps = new Set<string>([
+      ...Object.keys(peakActivity.messagesOverTime),
+      ...Object.keys(peakActivity.subOnlyMessagesOverTime),
+      ...Object.keys(peakActivity.emoteOnlyMessagesOverTime),
+      ...Object.keys(peakActivity.slowModeMessagesOverTime),
+    ]);
 
-    // Convert interpolated data to chart format
-    this.chartData.labels = interpolatedData.map(entry => this.dataInterpolationService.formatTime(entry.time));
-    this.chartData.datasets[0].data = interpolatedData.map(entry => entry.value);
+    // Sort the timestamps only once
+    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-    this.chart?.chart?.update();
-  }
+    // Predefine data arrays
+    const messagesData: number[] = [];
+    const subOnlyData: number[] = [];
+    const emoteOnlyData: number[] = [];
+    const slowModeData: number[] = [];
+    const labels: string[] = [];
 
-  formatUptime(uptime: string): string {
-    const [hours, minutes, seconds] = uptime.split(':');
-    const cleanSeconds = seconds.split('.')[0];
-    return `${hours}:${minutes}:${cleanSeconds}`;
+    // Populate the data arrays in a single loop
+    for (const time of sortedTimestamps) {
+      const timestamp = new Date(time);
+      labels.push(this.dataInterpolationService.formatTime(timestamp));
+
+      messagesData.push(peakActivity.messagesOverTime[time] || 0);
+      subOnlyData.push(peakActivity.subOnlyMessagesOverTime[time] || 0);
+      emoteOnlyData.push(peakActivity.emoteOnlyMessagesOverTime[time] || 0);
+      slowModeData.push(peakActivity.slowModeMessagesOverTime[time] || 0);
+    }
+
+    // Update datasets and hidden status in one loop
+    const datasets = [
+      { data: messagesData, index: 0 },
+      { data: subOnlyData, index: 1 },
+      { data: emoteOnlyData, index: 2 },
+      { data: slowModeData, index: 3 },
+    ];
+
+    let hasAnyData = false;
+
+    datasets.forEach(({ data, index }) => {
+      const hasData = data.some(val => val > 0);
+      this.chartData.datasets[index].hidden = !hasData;
+      this.chartData.datasets[index].data = data;
+      if (hasData) {
+        hasAnyData = true;
+      }
+    });
+
+    // Update labels and chart only if there's data
+    this.chartData.labels = labels;
+
+    if (hasAnyData) {
+      this.chart?.chart?.update();
+    }
   }
 
   formatAverageViewers(averageViewers: number): string {
