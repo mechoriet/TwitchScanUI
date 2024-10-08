@@ -2,29 +2,31 @@ import { EmoteUsage } from "./emote.model";
 import { SentimentAnalysis } from "./sentiment.model";
 import { SubscriptionStatistic } from "./subscription-model";
 
-export enum ViewerTrend {
+export enum Trend {
   Increasing,
   Decreasing,
   Stable
 }
-
 export class InitiatedChannel {
   channelName: string;
+  title: string;
+  game: string;
   messageCount: number;
   viewerCount: number;
   createdAt: string;
+  streamingSince: string;
   isOnline: boolean;
-  historyLength: number;
   uptime: string | undefined;
 
   constructor(channelName: string) {
     this.channelName = channelName;
+    this.title = "";
+    this.game = "";
     this.messageCount = 0;
     this.viewerCount = 0;
     this.createdAt = new Date().toISOString();
+    this.streamingSince = new Date().toISOString();
     this.isOnline = false;
-    this.historyLength = 0;
-
   }
 }
 
@@ -47,7 +49,7 @@ export interface ChannelMetrics {
   uptime: string;
   viewersOverTime: { [key: string]: number };
   totalWatchTime: number;
-  trend: ViewerTrend;
+  trend: Trend;
 }
 
 export interface ViewerStatistics {
@@ -83,6 +85,7 @@ export interface PeakActivityPeriod {
   subOnlyMessagesOverTime: { [key: string]: number };
   emoteOnlyMessagesOverTime: { [key: string]: number };
   slowModeMessagesOverTime: { [key: string]: number };
+  trend: Trend;
 }
 
 export interface TotalBans {

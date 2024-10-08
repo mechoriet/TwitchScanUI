@@ -10,6 +10,22 @@
     }
 
     &[aria-expanded="false"] {
-        transform: translateY(140%) !important;
+        transform: translateY(143%) !important;
+    }
+}
+
+.chat-btn {
+    transition: transform 0.3s ease-in-out;
+}
+
+.chat-btn {
+    // Default styles
+
+    &[aria-expanded="true"] {
+        transform: translateY(98%) !important;
+    }
+
+    &[aria-expanded="false"] {
+        transform: translateY(100%) !important;
     }
 }

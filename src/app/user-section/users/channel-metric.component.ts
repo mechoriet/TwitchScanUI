@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChannelMetrics, ViewerTrend } from '../../models/user.model';
+import { ChannelMetrics, Trend } from '../../models/user.model';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 
 @Component({
@@ -19,11 +19,11 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
             class="fa-solid"
             [ngClass]="{
               'trend-stable fa-minus':
-                metrics.trend === ViewerTrend.Stable,
+                metrics.trend === Trend.Stable,
               'trend-up fa-arrow-up':
-                metrics.trend === ViewerTrend.Increasing,
+                metrics.trend === Trend.Increasing,
               'trend-down fa-arrow-down':
-                metrics.trend === ViewerTrend.Decreasing
+                metrics.trend === Trend.Decreasing
             }"
           ></i>
         </h5>
@@ -53,15 +53,6 @@ import { DataInterpolationService } from '../../services/chart-service/data-inte
       .pointer {
         cursor: pointer;
       }
-      .trend-stable {
-        color: rgba(255, 168, 57, 0.5);
-      }
-      .trend-up {
-        color: #00ff00;
-      }
-      .trend-down {
-        color: #ff0000;
-      }
     `,
   ],
   imports: [CommonModule, BaseChartDirective],
@@ -70,7 +61,7 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   @Input({ required: true }) metrics!: ChannelMetrics;
 
-  ViewerTrend = ViewerTrend;
+  Trend = Trend;
 
   constructor(private interpolationService: DataInterpolationService) { }
 
@@ -176,12 +167,5 @@ export class ChannelMetricsComponent implements OnInit, OnChanges {
 
     // Update the chart
     this.chart?.chart?.update();
-  }
-
-  formatTime(time: string): string {
-    const date = new Date(time);
-    const hours = date.getUTCHours().toString().padStart(2, '0');
-    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
   }
 }

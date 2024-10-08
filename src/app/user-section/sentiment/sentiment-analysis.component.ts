@@ -22,7 +22,7 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 
       <div id="sentimentAnalysisCollapse" class="collapse show">
         <app-sentiment-over-time
-          [data]="userData.SentimentAnalysis.sentimentOverTime"
+          [userData]="userData"
           [redrawTrigger]="redrawTrigger"
         ></app-sentiment-over-time>
         <div class="row">

@@ -1,3 +1,5 @@
+import { Trend } from "./user.model";
+
 export interface SubscriptionStatistic {
     totalSubscribers: number;
     totalNewSubscribers: number;
@@ -7,4 +9,5 @@ export interface SubscriptionStatistic {
     averageSubscriptionMonths: number;
     topSubscribers: { [key: string]: number };
     subscriptionsOverTime: { key: string; value: number }[];
+    trend: Trend;
   }

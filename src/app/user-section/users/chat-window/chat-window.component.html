@@ -1,0 +1,49 @@
+<div class="d-flex flex-column h-100">
+    <form [formGroup]="observeForm" (ngSubmit)="onAddTextToObserve()" class="mt-2">
+        <div class="input-group">
+            <input type="text" class="form-control bg-glass text-light border-secondary"
+                placeholder="Enter username/text to observe" formControlName="observeText" />
+            <button class="btn btn-outline-light border-secondary" type="submit" [disabled]="observeForm.invalid">
+                Add
+            </button>
+        </div>
+    </form>
+    <!-- Badges for each observed text -->
+    <div class="mt-2 mx-2">
+        <span *ngFor="let text of observedTexts" class="badge bg-danger me-2">
+            {{ text }} ({{ observedTextCounts[text] || 0 }})
+        </span>
+    </div>
+
+    <!-- Pinned (observed) messages section -->
+    <div class="pinned-messages w-75 bg-glass p-2 mt-5 pt-5 rounded position-absolute translate-middle-x start-50 z-100"
+        *ngIf="observedMessages.length > 0">
+        <div *ngFor="let message of observedMessages" class="mb-2 observed text-light">
+            <strong [style.color]="message.chatMessage.colorHex" class="me-1">
+                {{ message.chatMessage.displayName }}:
+            </strong>
+            <span>{{ message.chatMessage.message }}</span>
+        </div>
+    </div>
+
+    <!-- Chat messages section -->
+    <div class="chat-messages mt-2 bg-glass text-light p-3 border border-secondary rounded mb-3 flex-grow-1 overflow-auto"
+        #chatMessagesContainer (scroll)="onScroll()">
+        <!-- Regular chat messages -->
+        <div *ngFor="let message of chatMessages" class="mb-2" [ngClass]="{
+          highlight: containsObservedText(message.chatMessage.displayName + ': ' + message.chatMessage.message)
+        }">
+            <strong [style.color]="message.chatMessage.colorHex" class="me-1">
+                {{ message.chatMessage.displayName }}:
+            </strong>
+            <span>
+                {{ message.chatMessage.message }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Scroll to bottom button -->
+    <button *ngIf="!isScrolledToBottom" class="btn btn-outline-light scroll-to-bottom-btn" (click)="scrollToBottom()">
+        <i class="fas fa-arrow-down"></i>
+    </button>
+</div>

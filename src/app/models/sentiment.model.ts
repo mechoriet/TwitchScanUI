@@ -1,9 +1,12 @@
+import { Trend } from "./user.model";
+
 export interface SentimentAnalysis {
     sentimentOverTime: SentimentOverTime[];
     topPositiveUsers: SentimentUser[];
     topNegativeUsers: SentimentUser[];
     topPositiveMessages: SentimentMessage[];
     topNegativeMessages: SentimentMessage[];
+    trend: Trend;
   }
   
   export interface SentimentOverTime {

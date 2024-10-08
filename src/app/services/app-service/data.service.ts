@@ -1,34 +1,39 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { ChannelMessageCount, ChannelStatus, InitiatedChannel, UserData } from '../../models/user.model';
 import * as signalR from '@microsoft/signalr';
 import { Result } from '../../models/result';
 import { HistoryData, HistoryTimeline } from '../../models/historical.model';
+import { ChatMessage } from '../../models/chat-message.model';
+import { backendUrl } from '../../general/variables';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
-  private apiUrl = 'https://twitch.dreckbu.de/';
   private hubConnection: signalR.HubConnection;
   private reconnectionAttempt = 0;
   private maxReconnectionAttempts = 5;
   private reconnectionDelay = 5000; // 5 seconds
   private channelName: string = '';
 
+  // Subject for successful connection to SignalR
+  connectionEstablished = new BehaviorSubject<boolean>(false);
   // Subject for new User Data coming in from SignalR
   userDataSubject = new Subject<UserData>();
   // Subject to handle image URL updates
-  imageUrlSubject = new Subject<string>(); 
+  imageUrlSubject = new Subject<string>();
   // Subject to handle online status updates
   onlineStatusSubject = new Subject<ChannelStatus>();
-  // Subject to hanlde message count updates
+  // Subject to handle message count updates
   messageCountSubject = new Subject<ChannelMessageCount>();
+  // Subject to handle channel messages
+  messageSubject = new Subject<ChatMessage>();
 
   constructor(private http: HttpClient) {
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(this.apiUrl + 'twitchHub')
+      .withUrl(backendUrl + 'twitchHub')
       .withAutomaticReconnect([0, 2000, 5000, 10000]) // Exponential backoff for automatic reconnect
       .build();
 
@@ -42,15 +47,18 @@ export class DataService {
       .then(() => {
         console.log('SignalR Connection started');
         this.reconnectionAttempt = 0; // Reset reconnection attempts on successful connection
+        this.connectionEstablished.next(true);
       })
       .catch(err => {
         console.error('Error while starting connection: ' + err);
         this.scheduleReconnection();
+        this.connectionEstablished.next(false);
       });
 
     this.hubConnection.onreconnected(() => {
       console.log('Reconnected to the SignalR hub.');
       this.reconnectionAttempt = 0;
+      this.connectionEstablished.next(true);
     });
 
     this.hubConnection.onreconnecting(() => {
@@ -60,6 +68,7 @@ export class DataService {
     this.hubConnection.onclose(() => {
       console.log('SignalR connection closed.');
       this.scheduleReconnection();
+      this.connectionEstablished.next(false);
     });
   }
 
@@ -96,6 +105,11 @@ export class DataService {
     this.hubConnection.on('ReceiveMessageCount', (channelName: string, messageCount: number) => {
       this.messageCountSubject.next({ channelName, messageCount });
     });
+
+    // Handle channel messages
+    this.hubConnection.on('ReceiveChannelMessage', (message: ChatMessage) => {
+      this.messageSubject.next(message);
+    });
   }
 
   getUserThumbnail(username: string): string {
@@ -116,15 +130,15 @@ export class DataService {
   }
 
   getUserData(channelName: string): Observable<UserData> {
-    return this.http.get<UserData>(this.apiUrl + "Twitch/GetChannelStatistics?channelName=" + channelName);
+    return this.http.get<UserData>(backendUrl + "Twitch/GetChannelStatistics?channelName=" + channelName);
   }
 
   getViewCountHistory(channelName: string): Observable<HistoryTimeline[]> {
-    return this.http.get<HistoryTimeline[]>(this.apiUrl + "Twitch/GetViewCountHistory?channelName=" + channelName);
+    return this.http.get<HistoryTimeline[]>(backendUrl + "Twitch/GetViewCountHistory?channelName=" + channelName);
   }
 
   getHistoryByKey(channelName: string, key: string): Observable<HistoryData> {
-    return this.http.get<HistoryData>(this.apiUrl + "Twitch/GetHistoryByKey?channelName=" + channelName + "&key=" + key);
+    return this.http.get<HistoryData>(backendUrl + "Twitch/GetHistoryByKey?channelName=" + channelName + "&key=" + key);
   }
 
   initUser(channelName: string): Observable<Result<object>> {
@@ -132,18 +146,27 @@ export class DataService {
       return this.initMultipleUsers(channelName.split(','));
     }
 
-    return this.http.post<Result<object>>(this.apiUrl + "Twitch/Init?channelName=" + channelName, {});
+    return this.http.post<Result<object>>(backendUrl + "Twitch/Init?channelName=" + channelName, {});
   }
 
   private initMultipleUsers(channelNames: string[]): Observable<Result<object>> {
-    return this.http.post<Result<object>>(this.apiUrl + "Twitch/InitMultiple", channelNames);
+    return this.http.post<Result<object>>(backendUrl + "Twitch/InitMultiple", channelNames);
   }
 
   removeUser(channelName: string): Observable<void> {
-    return this.http.delete<void>(this.apiUrl + "Twitch/Remove?channelName=" + channelName);
+    const accessToken = localStorage.getItem('access_token');
+    return this.http.post<void>(backendUrl + "Twitch/Remove?channelName=" + channelName, {}, {
+      headers: {
+        'AccessToken': accessToken || ''
+      }
+    });
   }
 
   getInitiatedChannels(): Observable<InitiatedChannel[]> {
-    return this.http.get<InitiatedChannel[]>(this.apiUrl + "Twitch/GetInitiatedChannels");
+    return this.http.get<InitiatedChannel[]>(backendUrl + "Twitch/GetInitiatedChannels");
+  }
+
+  addTextToObserve(channelName: string, message: string): Observable<void> {
+    return this.http.post<void>(backendUrl + "Twitch/AddTextToObserve?channelName=" + channelName + "&message=" + message, {});
   }
 }

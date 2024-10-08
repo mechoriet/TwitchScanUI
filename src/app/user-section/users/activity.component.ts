@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { ThumbnailComponent } from './thumbnail.component';
-import { UserData } from '../../models/user.model';
+import { Trend, UserData } from '../../models/user.model';
 import { ChannelMetricsComponent } from './channel-metric.component';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 import { getTimeSince } from '../../helper/date.helper';
@@ -25,7 +25,18 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
       <div id="peakActivityCollapse" class="collapse show">        
         <!-- Chart -->
         <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
-          <h5>Messages over time (UTC)</h5>
+          <h5>Messages over time (UTC)
+          <i
+            class="fa-solid"
+            [ngClass]="{
+              'trend-stable fa-minus':
+                userData.PeakActivityPeriods.trend === Trend.Stable,
+              'trend-up fa-arrow-up':
+                userData.PeakActivityPeriods.trend === Trend.Increasing,
+              'trend-down fa-arrow-down':
+                userData.PeakActivityPeriods.trend === Trend.Decreasing
+            }"
+          ></i></h5>
           <canvas (dblclick)="resetZoom()"            
             baseChart
             [data]="chartData"
@@ -68,6 +79,7 @@ export class ActivityComponent implements OnInit, OnChanges {
   @Input({ required: true }) username: string = '';
 
   getTimeSince = getTimeSince;
+  Trend = Trend;  
 
   constructor(private dataInterpolationService: DataInterpolationService) { }
 

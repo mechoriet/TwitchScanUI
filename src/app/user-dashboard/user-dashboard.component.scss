@@ -44,12 +44,22 @@ table {
 }
 
 // Classes
-.h-0 {
-    height: 0 !important;
-}
 
 .main-nav {
-    height: 3.5rem;
+    height: 4.5rem;
+}
+
+.border-glow-transition {
+    transition: all 0.3s ease;
+}
+
+.border-glow {
+    border-bottom: 1px solid #434567 !important;
+    box-shadow: 0px 0px 5px -1px rgba(155, 155, 255, 0.8);
+}
+
+.channel-container {
+    width: 75vw;
 }
 
 .main-text {
@@ -116,15 +126,6 @@ table {
     box-shadow: 0px 0px 8px -1px rgba(155, 155, 255, 0.8);
 }
 
-.border-glow-transition {
-    transition: all 0.3s ease;
-}
-
-.border-glow {
-    border-bottom: 1px solid #434567 !important;
-    box-shadow: 0px 0px 8px -1px rgba(155, 155, 255, 0.8);
-}
-
 .reload-btn {
     padding-top: 4px;
     font-size: 18px;
@@ -157,5 +158,12 @@ table {
 
     100% {
         transform: rotate(360deg);
+    }
+}
+
+// Media Queries
+@media (max-width: 768px) {
+    .channel-container {
+        width: 100vw;
     }
 }

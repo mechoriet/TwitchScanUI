@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChartConfiguration, ChartOptions, ChartType } from 'chart.js';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { UserData } from '../../models/user.model';
 import { BaseChartDirective } from 'ng2-charts';
 import { SubscriptionStatisticComponent } from "./subscription-statistic.component";
@@ -26,7 +26,7 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
         <!-- Audience Engagement Stats -->
         <div class="row">
           <ng-container>
-            <app-subscription-statistic [subscription]="userData.SubscriptionStatistic"></app-subscription-statistic>
+            <app-subscription-statistic [userData]="userData"></app-subscription-statistic>
           </ng-container>
           <div class="col-12" [class.col-md-6]="sentenceFrequencyChartData.datasets[0].data.length > 0" @fadeInOut>
             <!-- Top Chatters Chart -->

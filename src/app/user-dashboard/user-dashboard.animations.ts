@@ -9,12 +9,7 @@ export const moveAnimation = trigger('moveAnimation', [
         animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
       ])
     ], { optional: true }),
-    query(':leave', [
-      stagger('100ms', [
-        animate('300ms ease-out', style({ opacity: 0, transform: 'translateY(20px)' }))
-      ])
-    ], { optional: true }),
-    query(':enter, :leave', [
+    query(':enter', [
       style({ position: 'relative' }),
       animate('300ms ease-out')
     ], { optional: true }),
@@ -42,6 +37,15 @@ export const fadeOut = trigger('fadeOut', [
   })),
   transition(':leave', [
     animate('300ms ease-in-out', style({ opacity: 0 }))
+  ])
+])
+
+export const fadeIn = trigger('fadeIn', [
+  state('void', style({
+    opacity: 0
+  })),
+  transition(':enter', [
+    animate('300ms ease-in-out', style({ opacity: 1 }))
   ])
 ])
 

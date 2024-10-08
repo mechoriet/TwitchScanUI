@@ -35,8 +35,8 @@ import { CommonModule } from '@angular/common';
         padding: 5px;
         background: linear-gradient(
           90deg,
-          #333,
-          #222
+          rgb(30, 32, 37),
+          rgb(24, 26, 30),
         );
         border: 1px solid #444;
         border-radius: 5px;

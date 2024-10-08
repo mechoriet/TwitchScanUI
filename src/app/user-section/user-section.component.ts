@@ -4,13 +4,14 @@ import { UserDashboardComponent } from '../user-dashboard/user-dashboard.compone
 import { EmoteUsageComponent } from './message/emote-usage.component';
 import { SentimentAnalysisComponent } from './sentiment/sentiment-analysis.component';
 import { SentimentOverTimeComponent } from './sentiment/sentiment-over-time.component';
-import { SubscriptionStatisticComponent } from './users/subscription-statistic.component';
 import { TopUsersComponent } from './sentiment/top-users.component';
 import { CommonModule } from '@angular/common';
 import { ActivityComponent } from './users/activity.component';
 import { AudienceEngagementComponent } from './users/audience-engagement.component';
 import { ChannelMetricsComponent } from "./users/channel-metric.component";
 import { ChannelInfoComponent } from './users/channel-info.component';
+import { fadeInOut } from '../user-dashboard/user-dashboard.animations';
+import { ChatWindowComponent } from './users/chat-window/chat-window.component';
 
 @Component({
   selector: 'app-user-section',
@@ -26,15 +27,18 @@ import { ChannelInfoComponent } from './users/channel-info.component';
     AudienceEngagementComponent,
     CommonModule,
     ChannelMetricsComponent,
-    ChannelInfoComponent
+    ChannelInfoComponent, 
+    ChatWindowComponent
 ],
   templateUrl: './user-section.component.html',
-  styleUrl: './user-section.component.scss'
+  styleUrl: './user-section.component.scss',
+  animations: [
+    fadeInOut
+  ]
 })
 export class UserSectionComponent implements OnInit {
-  @Input({ required: true }) username: string = '';
-  @Input({ required: true }) isOnline: boolean = false;
-  @Input() data!: UserData;
+  @Input({ required: true }) username!: string;
+  @Input({ required: true }) userData!: UserData;
   notDismissed: boolean = true;
 
   saveDismissed(): void {

@@ -1,11 +1,11 @@
 import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
-import { SentimentOverTime } from '../../models/sentiment.model';
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
+import { Trend, UserData } from '../../models/user.model';
 Chart.register(zoomPlugin);
 
 @Component({
@@ -13,7 +13,18 @@ Chart.register(zoomPlugin);
   standalone: true,
   template: `
     <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
-      <h5>Sentiment Over Time (UTC)</h5>
+      <h5>Sentiment Over Time (UTC)
+          <i
+            class="fa-solid"
+            [ngClass]="{
+              'trend-stable fa-minus':
+                userData.SentimentAnalysis.trend === Trend.Stable,
+              'trend-up fa-arrow-up':
+                userData.SentimentAnalysis.trend === Trend.Increasing,
+              'trend-down fa-arrow-down':
+                userData.SentimentAnalysis.trend === Trend.Decreasing
+            }"
+          ></i></h5>
 
       <!-- Line Chart for Sentiment Over Time -->
       <canvas (dblclick)="resetZoom()"        
@@ -60,8 +71,10 @@ Chart.register(zoomPlugin);
 })
 export class SentimentOverTimeComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input() data: SentimentOverTime[] = [];
+  @Input({ required: true }) userData!: UserData;
   @Input() redrawTrigger: boolean = false;
+
+  Trend = Trend;
 
   constructor(private interpolationService: DataInterpolationService) { }
 
@@ -178,10 +191,8 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
   }
 
   updateChartData(): void {
-    if (!this.data || this.data.length === 0) return;
-
-    // Sort the input data by time
-    const data = this.data;
+    const data = this.userData.SentimentAnalysis.sentimentOverTime;
+    if (!data || data.length === 0) return;
 
     // Prepare raw data for interpolation
     const rawData = data.map((entry) => ({

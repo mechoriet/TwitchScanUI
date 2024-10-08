@@ -1,13 +1,28 @@
 <!-- Channel Info -->
-<div class="position-fixed top-0 start-50 translate-middle-x top-index info-container">
+<div *ngIf="userData" class="position-fixed top-0 start-50 translate-middle-x top-index info-container" @fadeInOut>
   <button
-    class="btn btn-dark info-btn top-index border-secondary rounded-0 border-0 border-bottom border-end border-start rounded-bottom position-absolute bottom-0 start-50 translate-middle-x"
+    class="btn bg-glass info-btn top-index border-secondary rounded-0 border-0 border-bottom border-end border-start rounded-bottom position-absolute bottom-0 start-50 translate-middle-x"
     type="button" data-bs-toggle="collapse" data-bs-target="#channelInfo" aria-expanded="false"
     aria-controls="channelInfo">
     <i class="fa-solid fa-info-circle text-warning"></i>
   </button>
   <div id="channelInfo" class="collapse">
-    <app-channel-info [userData]="data"></app-channel-info>
+    <app-channel-info [userData]="userData"></app-channel-info>
+  </div>
+</div>
+
+<!-- Channel Chat -->
+<div *ngIf="userData" class="position-fixed top-0 end-0 me-3 mt-3 top-index info-container" @fadeInOut>
+  <button
+    class="btn bg-glass chat-btn top-index border-secondary rounded-0 border-0 border-bottom border-end border-start rounded-bottom position-absolute bottom-0 end-0 me-3"
+    type="button" data-bs-toggle="collapse" data-bs-target="#channelChat" aria-expanded="false"
+    aria-controls="channelChat">
+    <i class="fa-solid fa-comment-dots text-warning"></i>
+  </button>
+  <div id="channelChat" class="collapse">
+    <div class="card bg-glass border-secondary p-2 rounded-0 rounded-bottom border-top-0">
+      <app-chat-window [username]="username"></app-chat-window>
+    </div>
   </div>
 </div>
 
@@ -15,15 +30,15 @@
   <div class="row">
     <!-- Sentiment Analysis -->
     <div class="col-12 col-md-6 col-lg-4">
-      <app-sentiment-analysis [userData]="data"></app-sentiment-analysis>
+      <app-sentiment-analysis [userData]="userData"></app-sentiment-analysis>
     </div>
     <!-- User Information -->
     <div class="col-12 col-md-6 col-lg-4">
-      <app-peak-activity-periods [username]="username" [userData]="data"></app-peak-activity-periods>
+      <app-peak-activity-periods [username]="username" [userData]="userData"></app-peak-activity-periods>
     </div>
     <!-- Audience Engagement -->
     <div class="col-12 col-md-6 col-lg-4">
-      <app-audience-engagement [userData]="data"></app-audience-engagement>
+      <app-audience-engagement [userData]="userData"></app-audience-engagement>
     </div>
   </div>
 </div>
@@ -40,7 +55,7 @@
           <br><strong class="text-danger">Double click</strong> chart to reset the view.
           <br><strong class="text-danger">Click</strong> legend items to hide them.
         </p>
-        <p>The data automatically refreshes every <strong class="text-danger">60 seconds</strong> to ensure you're
+        <p>The data automatically refreshes <strong class="text-danger">every second</strong> to ensure you're
           viewing the latest insights in real time.</p>
         <p>Thumbnails will be updated every <strong class="text-danger">5 minutes</strong>, as Twitch updates them
           infrequently. This helps in visualizing the current state of the stream.</p>

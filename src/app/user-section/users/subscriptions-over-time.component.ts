@@ -4,13 +4,25 @@ import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
+import { Trend, UserData } from '../../models/user.model';
 
 @Component({
   selector: 'app-subscriptions-over-time',
   standalone: true,
   template: `
     <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
-      <h5>Subscriptions Over Time (UTC)</h5>
+      <h5>Subscriptions Over Time (UTC)
+          <i
+            class="fa-solid"
+            [ngClass]="{
+              'trend-stable fa-minus':
+                userData.SubscriptionStatistic.trend === Trend.Stable,
+              'trend-up fa-arrow-up':
+                userData.SubscriptionStatistic.trend === Trend.Increasing,
+              'trend-down fa-arrow-down':
+                userData.SubscriptionStatistic.trend === Trend.Decreasing
+            }"
+          ></i></h5>
 
       <!-- Line Chart for Subscriptions Over Time -->
       <canvas (dblclick)="resetZoom()"        
@@ -57,8 +69,10 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 })
 export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input({ required: true }) subscriptions!: { key: string; value: number }[];
+  @Input({ required: true }) userData!: UserData;
   @Input() redrawTrigger: boolean = false;
+
+  Trend = Trend;
 
   constructor(private interpolationService: DataInterpolationService) { }
 
@@ -146,10 +160,11 @@ export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
   }
 
   updateChartData(): void {
-    if (!this.subscriptions || this.subscriptions.length === 0) return;
+    const subscriptions = this.userData?.SubscriptionStatistic.subscriptionsOverTime;
+    if (!subscriptions || subscriptions.length === 0) return;
 
     // Prepare the data for interpolation
-    const rawData = this.subscriptions.map(sub => ({
+    const rawData = subscriptions.map(sub => ({
       time: sub.key,
       value: sub.value,
     }));

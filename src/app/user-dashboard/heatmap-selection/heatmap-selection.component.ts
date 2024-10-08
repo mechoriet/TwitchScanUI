@@ -2,40 +2,13 @@ import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HistoryTimeline } from '../../models/historical.model';
+import { MatDialog } from '@angular/material/dialog';
+import { DayEntryDialogComponent } from './day-entry.dialog';
 
 @Component({
   selector: 'app-heatmap-selection',
   standalone: true,
-  template: `
-    <div class="year-selection">
-      <button class="btn border-0" (click)="changeYear(-1)"><i class="fas fa-chevron-left text-light"></i></button>
-      <span class="year-label text-light pointer" (click)="resetYear()">{{ selectedYear }}</span>
-      <button class="btn border-0" (click)="changeYear(1)"><i class="fas fa-chevron-right text-light"></i></button>
-    </div>
-    <i
-      class="fas fa-info-circle text-light ms-2 position-absolute"
-      data-toggle="tooltip"
-      data-placement="top"
-      title="Hover over days to see stream information. Click on a day to view the stream details. Return to current year by clicking on the year label."
-    ></i>
-    <div class="heatmap-container position-relative">
-      <div class="week-header">
-        <div class="corner-cell"></div>
-        <div *ngFor="let week of heatmap; let i = index" class="week-number text-muted">
-          {{ i + 1 }}
-        </div>
-      </div>
-      <div *ngFor="let day of daysOfWeek; let i = index" class="day-row">
-        <div class="day-label text-muted">{{ day.substring(0,2) }}</div>
-        <div *ngFor="let week of heatmap" class="day border-secondary"
-             [ngStyle]="{ 'background-color': getColor(week[i]) }"
-             (click)="onDayClick(week[i])"
-             [attr.title]="formatDate(week[i])">
-        </div>
-      </div>
-    </div>
-    <button *ngIf="isHistorySelected" class="btn btn-outline-secondary position-absolute top-0 end-0 m-2" (click)="unselectHistory()"><i class="fas fa-rotate-left"></i></button>
-  `,
+  templateUrl: './heatmap-selection.component.html',
   styleUrls: ['./heatmap-selection.component.scss'],
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,9 +18,13 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
   @Output() idSelected = new EventEmitter<string | undefined>();
   isHistorySelected: boolean = false;
 
-  heatmap: Array<Array<HistoryTimeline | string>> = [];
+  // Modify type to allow for arrays of HistoryTimeline
+  heatmap: Array<Array<HistoryTimeline[] | string>> = [];
   daysOfWeek: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   selectedYear: number = new Date().getUTCFullYear();
+  selectedDayEntries: HistoryTimeline[] = [];
+
+  constructor(private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.generateHeatmap();
@@ -69,7 +46,7 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   changeYear(delta: number): void {
-    this.selectedYear += delta;    
+    this.selectedYear += delta;
     this.generateHeatmap();
   }
 
@@ -79,13 +56,13 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   generateHeatmap(): void {
-    const weeks: Array<Array<HistoryTimeline | string>> = [];
+    const weeks: Array<Array<HistoryTimeline[] | string>> = [];
     const year = this.selectedYear;
     const janFirst = new Date(Date.UTC(year, 0, 1));
     const decLast = new Date(Date.UTC(year, 11, 31));
 
     let currentDate = new Date(janFirst);
-    let currentWeek: Array<HistoryTimeline | string> = new Array(janFirst.getUTCDay()).fill('');
+    let currentWeek: Array<HistoryTimeline[] | string> = new Array(janFirst.getUTCDay()).fill('');
 
     // Fill in all days of the selected year
     while (currentDate <= decLast) {
@@ -118,7 +95,10 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
         const dayOfWeek = date.getUTCDay();
 
         if (weekOfYear < weeks.length) {
-          weeks[weekOfYear][dayOfWeek] = timeline;
+          if (!Array.isArray(weeks[weekOfYear][dayOfWeek])) {
+            weeks[weekOfYear][dayOfWeek] = [];
+          }
+          (weeks[weekOfYear][dayOfWeek] as HistoryTimeline[]).push(timeline);
         }
       }
     });
@@ -132,28 +112,48 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
     return Math.floor(dayOfYear / 7);
   }
 
-  getColor(day: HistoryTimeline | string): string {
-    if (typeof day === 'string' || day === undefined) {
-      return `rgb(28, 28, 28)`;
+  getColor(day: HistoryTimeline[] | string): string {
+    if (typeof day === 'string' || day === undefined || !day.length) {
+      return `rgb(32, 34, 37)`;
     }
 
-    const averageViewers = day.averageViewers;
+    const averageViewers = day[0].averageViewers;
     if (averageViewers === 0) {
-      return `rgb(28, 28, 28)`;
+      return `rgb(32, 34, 37)`;
     }
 
     const maxViewers = Math.max(...this.timelines.map(t => t.peakViewers));
     const intensity = (averageViewers - 0) / (maxViewers - 0);
     const greenIntensity = Math.floor(intensity * 255);
 
-    return `rgba(28, ${greenIntensity}, 28, .8)`;
+    return `rgba(32, ${greenIntensity}, 37, .8)`;
   }
 
-  onDayClick(day: HistoryTimeline | string): void {
-    if (typeof day !== 'string') {
-      this.idSelected.emit(day.id);
-      this.isHistorySelected = true;
+  onDayClick(day: HistoryTimeline[] | string): void {
+    if (typeof day !== 'string' && day.length) {
+      if (day.length === 1) {
+        this.idSelected.emit(day[0].id);
+        this.isHistorySelected = true;
+      } else {
+        // Open the Angular Material dialog with the multiple entries
+        const dialogRef = this.dialog.open(DayEntryDialogComponent, {
+          width: '400px',
+          data: { selectedDayEntries: day }
+        });
+  
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result) {
+            this.selectEntry(result);
+          }
+        });
+      }
     }
+  }  
+
+  selectEntry(entry: HistoryTimeline): void {
+    this.idSelected.emit(entry.id);
+    this.isHistorySelected = true;
+    this.selectedDayEntries = [];
   }
 
   unselectHistory(): void {
@@ -161,11 +161,26 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
     this.idSelected.emit(undefined);
   }
 
-  formatDate(day: HistoryTimeline | string): string {
+  closeModal(): void {
+    this.selectedDayEntries = [];
+  }
+
+  formatDate(day: HistoryTimeline[] | string): string {
     if (typeof day === 'string' || day === undefined) {
       return day ? new Date(day).toDateString() : 'Invalid Date';
     }
-
-    return `${new Date(day.time).toDateString()}\n${day.averageViewers} viewers`;
+  
+    if (Array.isArray(day) && day.length > 0) {
+      // Explicitly tell TypeScript that day is HistoryTimeline[]
+      const firstEntry = day[0];
+      const firstDate = new Date(firstEntry.time).toDateString();
+      const viewerInfo = day.length === 1 
+        ? `${firstEntry.averageViewers} viewers`
+        : `${day.length} entries, top viewers: ${firstEntry.averageViewers}`;
+  
+      return `${firstDate}\n${viewerInfo}`;
+    }
+  
+    return 'No data';
   }
 }

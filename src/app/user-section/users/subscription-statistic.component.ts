@@ -6,6 +6,7 @@ import { SubscriptionSummaryComponent } from './subscription-summary.component';
 import { SubscriptionStatistic } from '../../models/subscription-model';
 import { SubscriptionsOverTimeComponent } from "./subscriptions-over-time.component";
 import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
+import { UserData } from '../../models/user.model';
 
 @Component({
   selector: 'app-subscription-statistic',
@@ -14,12 +15,12 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
         <div class="row">
           <div class="col-12">
             <!-- Subscriptions over time chart -->
-             <app-subscriptions-over-time [subscriptions]="subscription.subscriptionsOverTime"></app-subscriptions-over-time>
+             <app-subscriptions-over-time [userData]="userData"></app-subscriptions-over-time>
           </div>
           <div class="col-12" [class.col-md-6]="topSubscribersChartData.datasets[0].data.length > 0" @fadeInOut>
             <!-- Subscription Summary Chart Component -->
             <app-subscription-summary
-              [subscription]="subscription"
+              [subscription]="userData.SubscriptionStatistic"
               [redrawTrigger]="redrawTrigger"
             ></app-subscription-summary>
           </div>
@@ -68,7 +69,7 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 })
 export class SubscriptionStatisticComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input() subscription!: SubscriptionStatistic;
+  @Input({ required: true }) userData!: UserData;
   objectKeys = Object.keys;
   redrawTrigger: boolean = false;
 
@@ -132,10 +133,11 @@ export class SubscriptionStatisticComponent implements OnInit, OnChanges {
   }
 
   updateTopSubscribersChartData(): void {
-    if (!this.subscription.topSubscribers) return;
+    const subscription: SubscriptionStatistic = this.userData.SubscriptionStatistic;
+    if (!subscription.topSubscribers) return;
 
     // Convert topSubscribers object to array and sort by subscriptions descending
-    const sortedSubscribers = Object.entries(this.subscription.topSubscribers)
+    const sortedSubscribers = Object.entries(subscription.topSubscribers)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10); // Limit to top 10 subscribers for clarity
 
