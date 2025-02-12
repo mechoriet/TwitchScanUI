@@ -1,66 +1,33 @@
-export interface ChatMessage {
+export interface TwitchChatMessage {
     channel:     string;
-    chatMessage: TwitchChatMessage;
+    chatMessage: ChatMessageClass;
     time:        Date;
     id:          string;
 }
 
-export interface TwitchChatMessage {
-    badgeInfo:            any[];
-    bits:                 number;
-    bitsInDollars:        number;
-    channel:              string;
-    cheerBadge:           null;
-    customRewardId:       null;
-    emoteReplacedMessage: null;
-    id:                   string;
-    isBroadcaster:        boolean;
-    isFirstMessage:       boolean;
-    isHighlighted:        boolean;
-    isMe:                 boolean;
-    isModerator:          boolean;
-    isSkippingSubMode:    boolean;
-    isSubscriber:         boolean;
-    isVip:                boolean;
-    isStaff:              boolean;
-    isPartner:            boolean;
-    message:              string;
-    noisy:                number;
-    roomId:               string;
-    subscribedMonthCount: number;
-    tmiSentTs:            string;
-    chatReply:            null;
-    badges:               Badge[];
-    botUsername:          string;
-    color:                Color;
-    colorHex:             string;
-    displayName:          string;
-    emoteSet:             EmoteSet;
-    isTurbo:              boolean;
-    userId:               string;
-    username:             string;
-    userType:             number;
-    rawIrcMessage:        string;
+export interface ChatMessageClass {
+    username: string;
+    message:  string;
+    colorHex: string | undefined;
+    emotes:   Emote[];
 }
 
-export interface Badge {
-    key:   string;
-    value: string;
+export interface Emote {
+    id:         string;
+    name:       string;
+    imageUrl:   string;
+    startIndex: number;
+    endIndex:   number;
 }
 
-export interface Color {
-    r:             number;
-    g:             number;
-    b:             number;
-    a:             number;
-    isKnownColor:  boolean;
-    isEmpty:       boolean;
-    isNamedColor:  boolean;
-    isSystemColor: boolean;
-    name:          string;
-}
-
-export interface EmoteSet {
-    emotes:            any[];
-    rawEmoteSetString: string;
-}
+export interface ChannelMessage {
+    channel: string;
+    chatMessage: ChatMessageClass;
+    time:        Date;
+  }
+  
+  export interface ChatHistory {
+    username: string;
+    messages: ChannelMessage[];
+  }
+  

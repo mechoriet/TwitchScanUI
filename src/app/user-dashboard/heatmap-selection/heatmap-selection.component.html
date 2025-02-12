@@ -1,42 +1,47 @@
-<div class="year-selection">
-    <button class="btn border-0" (click)="changeYear(-1)"><i class="fas fa-chevron-left text-light"></i></button>
-    <span class="year-label text-light pointer" (click)="resetYear()">{{ selectedYear }}</span>
-    <button class="btn border-0" (click)="changeYear(1)"><i class="fas fa-chevron-right text-light"></i></button>
-</div>
+<div class="card border-secondary bg-dark text-light text-center m-0 h-100">
+    <div class="year-selection mt-2">
+        <button class="btn border-0" (click)="changeYear(-1)"><i class="fas fa-chevron-left text-light"></i></button>
+        <span class="year-label text-light pointer" (click)="resetYear()">{{ selectedYear }}</span>
+        <button class="btn border-0" (click)="changeYear(1)"><i class="fas fa-chevron-right text-light"></i></button>
+    </div>
 
-<i class="fas fa-info-circle text-light ms-2 position-absolute top-0 mt-3" data-toggle="tooltip" data-placement="top"
-    title="Hover over days to see stream information. Click on a day to view the stream details.">
-</i>
+    <i class="fas fa-info-circle text-light ms-3 position-absolute top-0 mt-3" data-toggle="tooltip"
+        data-placement="top"
+        title="Hover over days to see stream information. Click on a day to view the stream details.">
+    </i>
 
-<div class="heatmap-container position-relative">
-    <div class="week-header">
-        <div class="corner-cell"></div>
-        <div *ngFor="let week of heatmap; let i = index" class="week-number text-muted">
-            {{ i + 1 }}
+    <div class="heatmap-container position-relative mb-2 no-drag justify-content-center">
+        <div class="month-header">
+            <div class="corner-cell"></div>
+            <div *ngFor="let month of months" class="month-name text-muted">
+                {{ month }}
+            </div>
+        </div>
+        <div *ngFor="let day of daysOfWeek; let i = index" class="day-row">
+            <div class="day-label text-muted">{{ day.substring(0, 2) }}</div>
+            <div *ngFor="let week of heatmap" class="day border-secondary"
+                [ngStyle]="{ 'background-color': getColor(week[i]) }" (click)="onDayClick(week[i])"
+                [attr.title]="formatDate(week[i])">
+            </div>
         </div>
     </div>
-    <div *ngFor="let day of daysOfWeek; let i = index" class="day-row">
-        <div class="day-label text-muted">{{ day.substring(0, 2) }}</div>
-        <div *ngFor="let week of heatmap" class="day border-secondary"
-            [ngStyle]="{ 'background-color': getColor(week[i]) }" (click)="onDayClick(week[i])"
-            [attr.title]="formatDate(week[i])">
-        </div>
-    </div>
-</div>
 
-<button *ngIf="isHistorySelected" class="btn btn-outline-secondary position-absolute top-0 end-0 m-2"
-    (click)="unselectHistory()"><i class="fas fa-rotate-left"></i></button>
 
-<!-- Modal to select which entry of the day -->
-<div class="modal fade" id="dayEntryModal" tabindex="-1" aria-labelledby="dayEntryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark">
-            <div class="modal-body">
-                <ul class="list-group">
-                    <li *ngFor="let entry of selectedDayEntries" (click)="selectEntry(entry)" class="list-group-item">
-                        {{ formatDate([entry]) }} - {{ entry.averageViewers }} viewers
-                    </li>
-                </ul>
+    <button *ngIf="isHistorySelected" class="btn btn-outline-secondary position-absolute top-0 end-0 m-2"
+        (click)="unselectHistory()"><i class="fas fa-rotate-left"></i></button>
+
+    <!-- Modal to select which entry of the day -->
+    <div class="modal fade" id="dayEntryModal" tabindex="-1" aria-labelledby="dayEntryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-body">
+                    <ul class="list-group">
+                        <li *ngFor="let entry of selectedDayEntries" (click)="selectEntry(entry)"
+                            class="list-group-item">
+                            {{ formatDate([entry]) }} - {{ entry.averageViewers }} viewers
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

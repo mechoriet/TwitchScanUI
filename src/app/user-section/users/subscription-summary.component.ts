@@ -1,17 +1,18 @@
-import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import { SubscriptionStatistic } from '../../models/subscription-model';
-import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
+import { UserData } from '../../models/user.model';
+import { Subscription } from 'rxjs';
+import { DataService } from '../../services/app-service/data.service';
+import { SettingsService } from '../../services/app-service/settings.service';
 
 @Component({
     selector: 'app-subscription-summary',
     standalone: true,
     template: `
-    <div class="card border-secondary bg-dark text-light text-center" *ngIf="anySubscriptions()" @fadeInOut>
-      <h5>Summary</h5>
-
+    <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="anySubscriptions(); else noSubs">
+      <h5>Subscription Summary</h5>
       <!-- Subscription Summary Chart -->
       <canvas        
         baseChart
@@ -21,29 +22,44 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
       >
       </canvas>
     </div>
+
+    <ng-template #noSubs>
+        <div class="card border-secondary bg-dark text-light text-center h-100 m-0 justify-content-center">
+            <h5>No Subscription Data Available</h5>
+        </div>
+    </ng-template>
   `,
-    styles: [
-        `
-      .card {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        margin: 0.5rem 0;
-      }
-      canvas {
-        width: 100% !important;
-        height: 400px !important;
-      }
-    `,
-    ],
     imports: [CommonModule, BaseChartDirective],
-    animations: [
-        fadeInOut
-    ]
 })
-export class SubscriptionSummaryComponent implements OnInit, OnChanges {
+export class SubscriptionSummaryComponent implements OnDestroy {
     @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-    @Input() subscription!: SubscriptionStatistic;
-    @Input() redrawTrigger: boolean = false;
+    userData: UserData;
+    subscriptions: Subscription = new Subscription();
+
+    constructor(private dataService: DataService, private settingsService: SettingsService) {
+        this.userData = dataService.getUserData();
+        this.subscriptions.add(this.dataService.userData$.subscribe((userData) => {
+            this.userData = userData;
+            this.updateSummaryChartData();
+        }));
+
+        this.subscriptions.add(this.settingsService.settings$.subscribe((s) => {
+          if (this.chartOptions) {
+            // Update the animation setting
+            this.chartOptions.animation = s.showChartAnimations;
+        
+            // Force Chart.js to re-render the chart with the new options
+            if (this.chart && this.chart.chart) {
+              this.chart.chart.config.options = this.chartOptions;
+              this.chart.chart.update();
+            }
+          }
+        }));
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.unsubscribe();
+    }
 
     // Chart Data Structure
     summaryChartData: ChartConfiguration<'bar'>['data'] = {
@@ -87,6 +103,7 @@ export class SubscriptionSummaryComponent implements OnInit, OnChanges {
             x: {
                 ticks: {
                     color: 'white',
+                    font: { size: 10 },
                 },
                 grid: {
                     color: 'rgba(255, 255, 255, 0.1)',
@@ -102,34 +119,25 @@ export class SubscriptionSummaryComponent implements OnInit, OnChanges {
                 beginAtZero: true,
             },
         },
-        animation: {
-            duration: 1000,
-            easing: 'easeInOutQuart',
-        },
+        animation: false
     };
 
-    ngOnInit(): void {
-        this.updateSummaryChartData();
-    }
-
-    ngOnChanges(): void {
-        this.updateSummaryChartData();
-    }
-
     updateSummaryChartData(): void {
+        const subscription = this.userData.SubscriptionStatistic;
         // Prepare data for the summary chart
         this.summaryChartData.datasets[0].data = [
-            this.subscription.totalSubscribers,
-            this.subscription.totalNewSubscribers,
-            this.subscription.totalReSubscribers,
-            this.subscription.totalGiftedSubscriptions,
-            this.subscription.totalCommunitySubscriptions,
+            subscription.totalSubscribers,
+            subscription.totalNewSubscribers,
+            subscription.totalReSubscribers,
+            subscription.totalGiftedSubscriptions,
+            subscription.totalCommunitySubscriptions,
         ];
 
         this.chart?.chart?.update();
     }
 
     anySubscriptions(): boolean {
-        return this.subscription.totalSubscribers > 0;
+        const subscription = this.userData.SubscriptionStatistic;
+        return subscription.totalSubscribers > 0;
     }
 }

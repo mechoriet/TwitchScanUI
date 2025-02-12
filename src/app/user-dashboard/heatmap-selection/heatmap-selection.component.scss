@@ -1,47 +1,55 @@
 .heatmap-container {
   display: flex;
   flex-direction: column;
+  overflow-x: auto;
+  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  white-space: nowrap;
+  align-items: center;
 }
 
-.week-header {
+.month-header {
   display: flex;
   flex-direction: row;
   align-items: center;
   margin-bottom: 5px;
 }
 
-.corner-cell {
-  width: 40px;
+.month-name {
+  min-width: 60px;
+  height: 15px;
+  margin: 1px;
+  font-size: 0.85rem;
+  text-align: center;
 }
 
-.week-number {
-  width: 16px;
-  height: 16px;
-  margin: 1px;
-  font-size: 0.75rem;
-  text-align: center;
+.corner-cell {
+  min-width: 40px;
 }
 
 .day-row {
   display: flex;
   flex-direction: row;
   align-items: center;
+  height: 14px;
 }
 
 .day-label {
-  width: 40px;
+  min-width: 40px;
   font-weight: bold;
   text-align: right;
   padding-right: 5px;
-  font-size: .75rem;
+  font-size: .6rem;
 }
 
 .day {
-  width: 16px;
-  height: 16px;
+  min-width: 12px;
+  min-height: 12px;
   margin: 1px;
   border-radius: 2px;
   cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
 }
 
 .day:hover {
@@ -57,4 +65,159 @@
 .year-label {
   font-weight: bold;
   margin: 0 10px;
+}
+
+
+
+/* Media queries for responsiveness */
+
+/* For very large screens */
+@media (max-width: 1920px) {
+  .month-name, .day-label {
+    font-size: 0.75rem;
+    min-width: 50px;
+  }
+
+  .day {
+    min-width: 10px;
+    min-height: 10px;
+  }
+
+  .day-row {
+    height: 12px;
+  }
+
+  .corner-cell {
+    min-width: 40px;
+  }
+
+  .day-label {
+    font-size: .55rem;
+  }  
+}
+
+/* For large screens */
+@media (max-width: 1440px) {
+  .month-name, .day-label {
+    font-size: 0.7rem;
+    min-width: 45px;
+  }
+
+  .day {
+    min-width: 9px;
+    min-height: 9px;
+  }
+
+  .day-row {
+    height: 11px;
+  }
+
+  .corner-cell {
+    min-width: 35px;
+  }
+
+  .day-label {
+    font-size: .5rem;
+  }
+}
+
+
+/* For tablets in landscape mode */
+@media (max-width: 1024px) {
+  .month-name, .day-label {
+    font-size: 0.65rem;
+    min-width: 40px;
+  }
+
+  .day {
+    min-width: 8px;
+    min-height: 8px;
+  }
+
+  .day-row {
+    height: 10px;
+  }
+
+  .corner-cell {
+    min-width: 30px;
+  }
+
+  .day-label {
+    font-size: .45rem;
+  }
+}
+
+/* For tablets in portrait mode and smaller devices */
+@media (max-width: 768px) {
+  .month-name, .day-label {
+    font-size: 0.6rem;
+    min-width: 35px;
+  }
+
+  .day {
+    min-width: 7px;
+    min-height: 7px;
+  }
+
+  .day-row {
+    height: 9px;
+  }
+
+  .corner-cell {
+    min-width: 25px;
+  }
+
+  .day-label {
+    font-size: .4rem;
+  }
+}
+
+/* For mobile devices */
+@media (max-width: 480px) {
+  .month-name, .day-label {
+    font-size: 0.55rem;
+    min-width: 30px;
+  }
+
+  .day {
+    min-width: 6px;
+    min-height: 6px;
+  }
+
+  .day-row {
+    height: 8px;
+  }
+
+  .corner-cell {
+    min-width: 20px;
+  }
+
+  .day-label {
+    font-size: .35rem;
+  }
+}
+
+/* For very small mobile devices */
+@media (max-width: 320px) {
+  .month-name, .day-label {
+    font-size: 0.5rem;
+    min-width: 25px;
+  }
+
+  .day {
+    min-width: 5px;
+    min-height: 5px;
+  }
+
+  .day-row {
+    height: 7px;
+  }
+
+  .corner-cell {
+    min-width: 15px;
+  }
+
+  .day-label {
+    font-size: .3rem;
+  }
 }

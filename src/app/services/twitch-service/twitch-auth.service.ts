@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, firstValueFrom, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { TwitchLogin } from '../../models/twitch.login.model';
 import { DataService } from '../app-service/data.service';
@@ -27,7 +27,7 @@ export class TwitchAuthService {
 
     // Redirect the user to Twitch for login
     loginWithTwitch(): void {
-        const scopes = encodeURIComponent('user:read:email'); // Add required scopes
+        const scopes = encodeURIComponent('user:read:email'); // Add required scopes ()
         const twitchUrl = `${this.twitchAuthUrl}?client_id=${this.clientId}&redirect_uri=${this.redirectUri}&response_type=code&scope=${scopes}`;
 
         // Redirect to Twitch OAuth login page
@@ -55,8 +55,8 @@ export class TwitchAuthService {
     refreshLogin(): void {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-            const params = new HttpParams().set('refreshToken', refreshToken);
-            this.http.get<TwitchLogin>(`${backendUrl}TwitchAuth/RefreshToken`, { params }).subscribe({
+            const headers = { 'Authorization': `${refreshToken}` };
+            this.http.get<TwitchLogin>(`${backendUrl}TwitchAuth/RefreshToken`, { headers }).subscribe({
                 next: (user) => {
                     this.storeTokens(user);
                 },

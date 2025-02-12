@@ -1,29 +1,30 @@
 <!-- Navigation Bar -->
-<nav class="navbar main-nav bg-glass navbar-expand-lg fixed-top border-glow-transition"
-    [ngClass]="{'h-0 border-bottom border-secondary': userData !== undefined, 'border-glow': userData === undefined}"
+<nav class="navbar main-nav bg-glass navbar-expand-lg fixed-top border-glow-transition border-glow"
     @fadeInOut>
     <div class="container-fluid my-1">
         <!-- Brand Icon -->
-        <a class="navbar-brand pointer position-absolute ms-2" *ngIf="userData === undefined" @fadeInOut>
+        <a class="navbar-brand pointer position-absolute ms-2" @fadeInOut>
             <i class="fa-solid fa-spider text-warning home-icon"></i>
         </a>
 
         <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            *ngIf="userData === undefined" aria-controls="navbarNav" aria-expanded="false"
+            aria-controls="navbarNav" aria-expanded="false"
             aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div *ngIf="userData === undefined" class="collapse navbar-collapse" id="navbarNav">
+        <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item my-1" style="width: 50vw;">
                     <div class="input-group rounded flex-grow-1 me-2">
                         <span class="input-group-text bg-dark border-secondary text-light" id="basic-addon1">
                             <i class="fa-brands fa-twitch"></i>
                         </span>
-                        <input #userNameInput class="form-control bg-dark border-secondary text-light text-center" type="text"
-                            [(ngModel)]="username" [disabled]="loading" placeholder="Search Twitch channel..." aria-label="Twitch channel username" />
-                        <button *ngIf="userData === undefined" class="btn btn-dark border-secondary" type="button" title="Start Monitoring">
+                        <input #userNameInput class="form-control bg-dark border-secondary text-light text-center"
+                            type="text" [(ngModel)]="username" [disabled]="loading"
+                            placeholder="Search Twitch channel..." aria-label="Twitch channel username" />
+                        <button class="btn btn-dark border-secondary" type="button"
+                            title="Start Monitoring">
                             <i class="fa-solid fa-play text-warning"></i>
                         </button>
                         <button *ngIf="loading" class="btn btn-dark border-secondary" type="button"
@@ -36,47 +37,22 @@
         </div>
 
         <!-- Twitch login button on the right -->
-        <div *ngIf="userData === undefined && userAccount === undefined" class="d-flex">
-            <button class="btn btn-dark border-secondary" type="button" (click)="twitchAuthService.loginWithTwitch()" title="Login with Twitch">
+        <div *ngIf="userAccount === undefined" class="d-flex">
+            <button class="btn btn-dark border-secondary" type="button" (click)="twitchAuthService.loginWithTwitch()"
+                title="Login with Twitch">
                 <i class="fa-brands fa-twitch text-warning px-1"></i>
             </button>
         </div>
 
         <!-- Otherwise show user account profile picture -->
-        <div *ngIf="userData === undefined && userAccount !== undefined" class="d-flex">
+        <div *ngIf="userAccount !== undefined" class="d-flex">
             <button class="btn btn-dark border-secondary" type="button" (click)="logout()" title="Logout">
                 <img [src]="userAccount.profileImageUrl" class="rounded-circle" style="height: 30px; width: 30px;"
                     alt="User Profile Picture" />
             </button>
         </div>
     </div>
-
-    <!-- Button Controls -->
-    <div *ngIf="userData !== undefined" @fadeInOut
-        class="btn-controls position-absolute border-secondary border-start border-bottom border-end bottom-0 start-0 ms-3 rounded-bottom bg-dark">
-        <button class="btn top-index border-secondary rounded-0 rounded-bottom border-0 bg-glass" type="button"
-            (click)="reset()">
-            <i class="fa-solid fa-arrow-left text-warning"></i>
-        </button>
-        <button *ngIf="viewCountHistory.length > 0" @fadeInOut
-            class="btn top-index border-secondary rounded-0 rounded-bottom border-0 bg-glass" type="button"
-            data-bs-toggle="collapse" data-bs-target="#viewCountHistory" aria-expanded="false"
-            aria-controls="viewCountHistory">
-            <i class="fa-solid fa-calendar-day text-warning"></i>
-        </button>
-    </div>
 </nav>
-
-<!-- View Count History -->
-<div *ngIf="viewCountHistory.length > 0" @fadeInOut id="viewCountHistory"
-    class="history-container z-100 collapse position-fixed top-0 pt-2 ps-2 pb-4 pe-4 bg-dark border-glow rounded border-secondary ms-3">
-    <div>
-        <div>
-            <app-heatmap-selection [timelines]="viewCountHistory"
-                (idSelected)="onHistoryDateSelected($event)"></app-heatmap-selection>
-        </div>
-    </div>
-</div>
 
 <!-- Loading Spinner with Backdrop -->
 <div class="loading-backdrop" *ngIf="loading">
@@ -89,18 +65,18 @@
         [class.show]="notDismissed">
         <div class="d-flex">
             <div class="toast-body">
-                <p class="text-danger text-center"><strong>Important Notice</strong></p>
+                <small>v{{version}}</small>
+                <p class="text-danger text-center"><strong>Important Notice:</strong></p>
                 <p>This project is still very much a work in progress. As such, there may be bugs and issues that
                     need to be resolved.<br>
                     <small>You can reach me at <a class="text-decoration-none" href="mailto:kappa@twitchtrends.tv"><i
                                 class="fa-solid fa-envelope"></i>{{'kappa@twitchtrends.tv'}}</a></small>
                 </p>
-                <p>The app works with live data. To begin, enter a Twitch username and press "Enter" to start
-                    monitoring the channel.</p>
-                <p>Once monitoring is initiated, data will gradually accumulate after a short delay. Depending on
-                    channel activity, this process may take a few minutes.</p>
+                <p>The app works with live Twitch data. If you want to add your own channel you can do so by logging in with your Twitch account (top right).</p>
+                <p>Once monitoring is initiated, data will gradually accumulate.</p>
+                <p>Historical data is automatically saved once a channel goes offline.</p>
                 <p class="text-danger"><strong>Note:</strong> Data persistence is not guaranteed, as live updates are
-                    ongoing, and the public API regularly cleans data.</p>
+                    ongoing.</p>
             </div>
             <button type="button" class="btn-close btn-close-black position-absolute top-0 end-0 mt-4 me-4"
                 data-bs-dismiss="toast" aria-label="Close" (click)="saveDismissed()"></button>
@@ -108,7 +84,7 @@
     </div>
 </div>
 <!-- Main Content -->
-<div class="container-fluid mt-5 mb-4 d-flex justify-content-center" [ngClass]="{'pt-5': userData===undefined, 'pt-3': userData!==undefined}">
+<div class="container-fluid mt-5 mb-4 d-flex justify-content-center pt-4">
 
 
     <!-- Information Alert -->
@@ -118,13 +94,13 @@
     </div>
 
     <!-- Previously Added Channels -->
-    <div class="card channel-container bg-dark text-light border-secondary p-0"
-        *ngIf="userData === undefined && filteredChannels().length > 0" @listAnimation>
+    <div class="channel-container text-light p-0"
+        *ngIf="filteredChannels().length > 0" @listAnimation>
         <!-- Display Cards for Channels -->
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 row-cols-lg-6 g-4 p-3">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 row-cols-xl-6 row-cols-xxl-6 g-4 p-3">
             <div class="col" *ngFor="let channel of filteredChannels(); trackBy: trackByChannelId"
                 (click)="username = channel.channelName; fetchNewData()" @moveAnimation>
-                <div class="card h-100 bg-glass text-light border-secondary pointer">
+                <div class="card h-100 bg-glass text-light border-secondary pointer channel-card border-glow-transition">
                     <!-- Channel Thumbnail -->
                     <div class="position-relative">
                         <img class="card-img-top" style="height: 160px; object-fit: cover;"
@@ -153,19 +129,22 @@
                                 {{ channel.isOnline ? 'Online' : 'Offline' }}
                             </span>
                         </div>
-                        <p *ngIf="channel.isOnline" [title]="channel.title" class="text-truncate m-0"><small>{{channel.title}}</small></p>
-                        <p *ngIf="channel.isOnline" [title]="channel.title" class="text-truncate text-muted text-center m-0"><small>{{channel.game}}</small></p>
-                        <div class="d-flex justify-content-between mt-3" *ngIf="viewportService.isFullScreenView$ | async">
+                        <p *ngIf="channel.isOnline" [title]="channel.title" class="text-truncate m-0">
+                            <small>{{channel.title}}</small></p>
+                        <p *ngIf="channel.isOnline" [title]="channel.title"
+                            class="text-truncate text-muted text-center m-0"><small>{{channel.game}}</small></p>
+                        <div class="d-flex justify-content-between mt-3"
+                            *ngIf="viewportService.isFullScreenView$ | async">
                             <span><strong>Messages:</strong></span>
                             <span><span *ngIf="channel.isOnline; else noMessages">{{ channel.messageCount |
                                     numberAbbreviator }}</span></span>
                         </div>
 
-                        <div class="d-flex justify-content-between mt-2" *ngIf="viewportService.isFullScreenView$ | async">
+                        <div class="d-flex justify-content-between mt-2"
+                            *ngIf="viewportService.isFullScreenView$ | async">
                             <span><strong>Messages/min:</strong></span>
                             <span><span *ngIf="channel.isOnline; else noMessages">{{
-                                    getMessagesPerMinute(channel.messageCount, channel.createdAt) | number: '1.0-2'
-                                    }}</span></span>
+                                    getMessagesPerMinute(channel.messageCount, channel.streamingSince) | number: '1.0-2'}}</span></span>
                         </div>
                     </div>
                 </div>
@@ -173,12 +152,6 @@
         </div>
     </div>
 </div>
-<!-- User Data Section -->
- <div class="container-fluid">
-    <div *ngIf="userData !== undefined" @fadeInOut>
-        <app-user-section [username]="username" [userData]="userData"></app-user-section>
-    </div>
- </div>
 
 <!-- Templates -->
 <ng-template #noMessages>

@@ -1,43 +1,63 @@
-import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
-import { EmoteUsage } from '../../models/emote.model';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
+import { Subscription } from 'rxjs';
+import { DataService } from '../../services/app-service/data.service';
+import { UserData } from '../../models/user.model';
+import { SettingsService } from '../../services/app-service/settings.service';
 
 @Component({
   selector: 'app-emote-usage',
   standalone: true,
   template: `
-    <div class="card bg-dark border-secondary text-light">
-      <h5 (click)="updateChartData()"
-      class="pointer">
-      <i class="fa-solid fa-face-grin-tongue-wink me-2 text-warning"></i> Emotes</h5>
-      <div id="emoteCollapse">
-        <div class="card border-secondary bg-dark text-light text-center">     
-          <h5>Emote Usage</h5>   
-          <canvas
-            *ngIf="emoteChartData.datasets[0].data.length > 0"
-            baseChart
-            [data]="emoteChartData"
-            [options]="chartOptions"
-            [type]="'bar'"
-          >
-          </canvas>
-        </div>
-      </div>
+    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2">
+    <h5>Emote Usage</h5>   
+      <canvas
+        *ngIf="emoteChartData.datasets[0].data.length > 0"
+        baseChart
+        [data]="emoteChartData"
+        [options]="chartOptions"
+        [type]="'bar'"
+      >
+      </canvas>
     </div>
   `,
-  styles: [`
-    .card { border: 1px solid #ccc; padding: 1rem; margin: 0.5rem 0; }
-    ul { list-style-type: none; padding: 0; }
-    li { padding: 0.2rem 0; }
-    canvas { width: 100% !important; height: 400px !important; }
-  `],
-  imports: [CommonModule, BaseChartDirective]
+  imports: [CommonModule, BaseChartDirective],
 })
-export class EmoteUsageComponent implements OnInit, OnChanges {
+export class EmoteUsageComponent implements OnDestroy {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input() emotes: EmoteUsage[] = [];
+  userData: UserData;
+  subscription: Subscription = new Subscription();
+
+  constructor(private dataService: DataService, private settingsService: SettingsService) {
+    this.userData = dataService.getUserData();
+    this.subscription.add(
+      dataService.userData$.subscribe((userData) => {
+        this.userData = userData;
+        this.updateChartData();
+      })
+    );
+
+    this.subscription.add(
+      settingsService.settings$.subscribe((s) => {
+        if (this.chartOptions) {
+          // Update the animation setting
+          this.chartOptions.animation = s.showChartAnimations;
+
+          // Force Chart.js to re-render the chart with the new options
+          if (this.chart && this.chart.chart) {
+            this.chart.chart.config.options = this.chartOptions;
+            this.chart.chart.update();
+          }
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
 
   // Chart Data Structure
   emoteChartData: ChartConfiguration<'bar'>['data'] = {
@@ -69,6 +89,7 @@ export class EmoteUsageComponent implements OnInit, OnChanges {
       x: {
         ticks: {
           color: 'white',
+          font: { size: 10 },
         },
         grid: {
           color: 'rgba(255, 255, 255, 0.1)',
@@ -90,19 +111,13 @@ export class EmoteUsageComponent implements OnInit, OnChanges {
     },
   };
 
-  ngOnInit(): void {
-    this.updateChartData();
-  }
-
-  ngOnChanges(): void {
-    this.updateChartData();
-  }
-
   updateChartData(): void {
     // Populate chart data with the top 10 emote usages
-    const topEmotes = this.emotes.slice(0, 10);
-    this.emoteChartData.labels = topEmotes.map(emote => emote.key);
-    this.emoteChartData.datasets[0].data = topEmotes.map(emote => emote.value);
+    const topEmotes = this.userData.EmoteUsage.slice(0, 10);
+    this.emoteChartData.labels = topEmotes.map((emote) => emote.key);
+    this.emoteChartData.datasets[0].data = topEmotes.map(
+      (emote) => emote.value
+    );
 
     this.chart?.chart?.update();
   }

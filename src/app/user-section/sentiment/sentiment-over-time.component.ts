@@ -1,18 +1,20 @@
-import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
 import { Trend, UserData } from '../../models/user.model';
+import { DataService } from '../../services/app-service/data.service';
+import { Subscription } from 'rxjs';
+import { SettingsService } from '../../services/app-service/settings.service';
 Chart.register(zoomPlugin);
 
 @Component({
   selector: 'app-sentiment-over-time',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
+    <div class="card border-secondary bg-dark text-light text-center m-0 px-2" *ngIf="chartData.datasets[0].data.length > 0; else noData">
       <h5>Sentiment Over Time (UTC)
           <i
             class="fa-solid"
@@ -28,6 +30,7 @@ Chart.register(zoomPlugin);
 
       <!-- Line Chart for Sentiment Over Time -->
       <canvas (dblclick)="resetZoom()"        
+      class="no-drag px-2"       
         baseChart
         [data]="chartData"
         [options]="chartOptions"
@@ -35,17 +38,17 @@ Chart.register(zoomPlugin);
       >
       </canvas>
     </div>
+
+    <ng-template #noData>
+      <div class="card border-secondary bg-dark text-light text-center m-0 justify-content-center">
+        <h5>No Sentiment Data Available</h5>
+      </div>
+    </ng-template>
   `,
   styles: [
     `
       .card {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        margin: 0.5rem 0;
-      }
-      canvas {
-        width: 100% !important;
-        height: 400px !important;
+        height: 100% !important;
       }
       table {
         width: 100%;
@@ -65,18 +68,38 @@ Chart.register(zoomPlugin);
     `,
   ],
   imports: [CommonModule, BaseChartDirective],
-  animations: [
-    fadeInOut
-  ]
 })
-export class SentimentOverTimeComponent implements OnInit, OnChanges {
+export class SentimentOverTimeComponent implements OnDestroy {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input({ required: true }) userData!: UserData;
-  @Input() redrawTrigger: boolean = false;
+  userData!: UserData;
+  subscriptions: Subscription = new Subscription();
 
   Trend = Trend;
 
-  constructor(private interpolationService: DataInterpolationService) { }
+  constructor(private interpolationService: DataInterpolationService, private dataService: DataService, private settingsService: SettingsService) {
+    this.userData = dataService.getUserData();
+    this.subscriptions.add(this.dataService.userData$.subscribe((userData) => {
+      this.userData = userData;
+      this.updateChartData();
+    }));
+
+    this.subscriptions.add(this.settingsService.settings$.subscribe((s) => {
+      if (this.chartOptions) {
+        // Update the animation setting
+        this.chartOptions.animation = s.showChartAnimations;
+    
+        // Force Chart.js to re-render the chart with the new options
+        if (this.chart && this.chart.chart) {
+          this.chart.chart.config.options = this.chartOptions;
+          this.chart.chart.update();
+        }
+      }
+    }));
+   }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
 
   // Chart Data Structure
   chartData: ChartConfiguration<'line'>['data'] = {
@@ -132,7 +155,7 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: 'white' },
+        labels: { color: 'white', font: { size: 10 } },
       },
       tooltip: {
         enabled: true,
@@ -172,27 +195,19 @@ export class SentimentOverTimeComponent implements OnInit, OnChanges {
         beginAtZero: true,
       },
     },
-    animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart',
-    },
+    animation: false
   };
-
-  ngOnInit(): void {
-    this.updateChartData();
-  }
-
-  ngOnChanges(): void {
-    this.updateChartData();
-  }
 
   resetZoom(): void {
     this.chart?.chart?.resetZoom();
   }
 
-  updateChartData(): void {
-    const data = this.userData.SentimentAnalysis.sentimentOverTime;
-    if (!data || data.length === 0) return;
+  async updateChartData(): Promise<void> {
+    const data = this.userData?.SentimentAnalysis?.sentimentOverTime;
+    if (!data || data.length === 0) {
+      this.chartData.datasets[0].data = [];
+      return;
+    }
 
     // Prepare raw data for interpolation
     const rawData = data.map((entry) => ({

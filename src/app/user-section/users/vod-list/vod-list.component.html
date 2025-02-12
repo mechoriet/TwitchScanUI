@@ -1,0 +1,52 @@
+<!-- Modal structure -->
+<div class="modal fade top-index" id="vodListModal" tabindex="-1" aria-labelledby="vodListModalLabel" aria-hidden="true"
+    #vodListModal>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content bg-glass text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="vodListModalLabel">{{ username }}'s VODs</h5>
+                <button type="button" class="btn-close text-light" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row" *ngIf="!isLoading; else loadingVods" @fadeInOut>
+                    <ng-container *ngIf="vods.length > 0; else noVods">
+                        <div *ngFor="let vod of vods" class="col-md-4 mb-3">
+                            <div class="card bg-dark border-secondary text-light">
+                                <img [src]="vod.thumbnailUrl.replace('%{width}', '640').replace('%{height}', '360')"
+                                    class="card-img-top" alt="{{ vod.title }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ vod.title }}</h5>
+                                    <p class="card-text">
+                                        <strong>Duration:</strong> {{ vod.duration }}<br>
+                                        <strong>Views:</strong> {{ vod.viewCount }}<br>
+                                        <strong>Published At:</strong> {{ vod.publishedAt | date }}
+                                    </p>
+                                    <button class="btn btn-primary" (click)="selectVod(vod)">
+                                        <i class="fa-solid fa-comment"></i> View Chat
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loadingVods>
+    <div class="text-center">
+        <p><i class="fas fa-cog fa-spin fa-2x"></i></p>
+        <p>Loading VOD Chat... This may take a while.</p>
+        <p>You can close this dialog and continue using the app.</p>
+    </div>
+</ng-template>
+
+<ng-template #noVods>
+    <div class="text-center" *ngIf="isLoaded; else loadingVods;">
+        <p>Nothing to see here...</p>
+    </div>
+</ng-template>

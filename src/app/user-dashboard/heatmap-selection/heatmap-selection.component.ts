@@ -1,9 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HistoryTimeline } from '../../models/historical.model';
 import { MatDialog } from '@angular/material/dialog';
 import { DayEntryDialogComponent } from './day-entry.dialog';
+import { DataService } from '../../services/app-service/data.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-heatmap-selection',
@@ -11,31 +13,83 @@ import { DayEntryDialogComponent } from './day-entry.dialog';
   templateUrl: './heatmap-selection.component.html',
   styleUrls: ['./heatmap-selection.component.scss'],
   imports: [CommonModule, FormsModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewInit {
-  @Input() timelines: HistoryTimeline[] = [];
-  @Output() idSelected = new EventEmitter<string | undefined>();
+export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
+  username: string = '';
+  timelines: HistoryTimeline[] = [];
   isHistorySelected: boolean = false;
+  subscriptions: Subscription = new Subscription();
 
   // Modify type to allow for arrays of HistoryTimeline
   heatmap: Array<Array<HistoryTimeline[] | string>> = [];
   daysOfWeek: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  months: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   selectedYear: number = new Date().getUTCFullYear();
   selectedDayEntries: HistoryTimeline[] = [];
 
-  constructor(private dialog: MatDialog) {}
+  // Dragging variables
+  isDragging: boolean = false;
+  startX: number = 0;
+  startY: number = 0;
+  scrollLeft: number = 0;
+  scrollTop: number = 0;
 
-  ngOnInit(): void {
-    this.generateHeatmap();
+  constructor(private dialog: MatDialog, private dataService: DataService, private elRef: ElementRef) {
+    this.username = dataService.getUserName();
+    this.subscriptions.add(this.dataService.userName$.subscribe((username) => {
+      this.username = username;
+      this.getTimelines();
+    }));
+  }
+
+  getTimelines(): void {
+    this.dataService.getViewCountHistory(this.username).subscribe((timelines) => {
+      this.timelines = timelines;
+      this.generateHeatmap();
+    });
   }
 
   ngAfterViewInit(): void {
     document.addEventListener('click', this.onDocumentClick.bind(this));
+
+    const heatmapContainer = this.elRef.nativeElement.querySelector('.heatmap-container');
+
+    // Listen for mouse down event to start dragging
+    heatmapContainer.addEventListener('mousedown', (e: MouseEvent) => {
+      this.isDragging = true;
+      heatmapContainer.classList.add('dragging');
+      this.startX = e.pageX - heatmapContainer.offsetLeft;
+      this.startY = e.pageY - heatmapContainer.offsetTop;
+      this.scrollLeft = heatmapContainer.scrollLeft;
+      this.scrollTop = heatmapContainer.scrollTop;
+    });
+
+    // Listen for mouse up event to stop dragging
+    window.addEventListener('mouseup', () => {
+      this.isDragging = false;
+      heatmapContainer.classList.remove('dragging');
+    });
+
+    // Listen for mouse move event to handle dragging
+    heatmapContainer.addEventListener('mousemove', (e: MouseEvent) => {
+      if (!this.isDragging) return; // Only scroll if dragging
+      e.preventDefault();
+      const x = e.pageX - heatmapContainer.offsetLeft;
+      const y = e.pageY - heatmapContainer.offsetTop;
+      const walkX = (x - this.startX) * 1; // Adjust scroll speed
+      const walkY = (y - this.startY) * 1;
+      heatmapContainer.scrollLeft = this.scrollLeft - walkX;
+      heatmapContainer.scrollTop = this.scrollTop - walkY;
+    });
   }
 
   ngOnDestroy(): void {
     document.removeEventListener('click', this.onDocumentClick.bind(this));
+    this.subscriptions.unsubscribe();
+    const heatmapContainer = this.elRef.nativeElement.querySelector('.heatmap-container');
+    heatmapContainer.removeEventListener('mousedown', () => { });
+    window.removeEventListener('mouseup', () => { });
+    heatmapContainer.removeEventListener('mousemove', () => { });
   }
 
   onDocumentClick(event: MouseEvent): void {
@@ -104,6 +158,16 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
     });
 
     this.heatmap = weeks;
+
+    // Scroll to the current week or a specific week based on logic
+    setTimeout(() => {
+      const currentDate = new Date(); // Or some other logic to determine the target week
+      const currentWeekIndex = this.getWeekOfYear(currentDate); // Determine the correct week index
+      const weekElements = this.elRef.nativeElement.querySelectorAll('.week-number');
+      if (weekElements[currentWeekIndex]) {
+        weekElements[currentWeekIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 0);
   }
 
   getWeekOfYear(date: Date): number {
@@ -132,7 +196,7 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
   onDayClick(day: HistoryTimeline[] | string): void {
     if (typeof day !== 'string' && day.length) {
       if (day.length === 1) {
-        this.idSelected.emit(day[0].id);
+        this.getHistoryDataById(day[0].id);
         this.isHistorySelected = true;
       } else {
         // Open the Angular Material dialog with the multiple entries
@@ -140,7 +204,7 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
           width: '400px',
           data: { selectedDayEntries: day }
         });
-  
+
         dialogRef.afterClosed().subscribe((result) => {
           if (result) {
             this.selectEntry(result);
@@ -148,17 +212,28 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
         });
       }
     }
-  }  
+  }
+
+  getHistoryDataById(id: string) {
+    this.dataService.getHistoryByKey(this.username, id).subscribe({
+      next: (data) => {
+        this.dataService.historicalDataSubject.next(data);
+      },
+      error: (err) => {
+        console.error(err);
+      }
+    });
+  }
 
   selectEntry(entry: HistoryTimeline): void {
-    this.idSelected.emit(entry.id);
+    this.getHistoryDataById(entry.id);
     this.isHistorySelected = true;
     this.selectedDayEntries = [];
   }
 
   unselectHistory(): void {
     this.isHistorySelected = false;
-    this.idSelected.emit(undefined);
+    this.dataService.historicalDataSubject.next(undefined);
   }
 
   closeModal(): void {
@@ -169,18 +244,18 @@ export class HeatmapSelectionComponent implements OnInit, OnDestroy, AfterViewIn
     if (typeof day === 'string' || day === undefined) {
       return day ? new Date(day).toDateString() : 'Invalid Date';
     }
-  
+
     if (Array.isArray(day) && day.length > 0) {
       // Explicitly tell TypeScript that day is HistoryTimeline[]
       const firstEntry = day[0];
       const firstDate = new Date(firstEntry.time).toDateString();
-      const viewerInfo = day.length === 1 
+      const viewerInfo = day.length === 1
         ? `${firstEntry.averageViewers} viewers`
         : `${day.length} entries, top viewers: ${firstEntry.averageViewers}`;
-  
+
       return `${firstDate}\n${viewerInfo}`;
     }
-  
+
     return 'No data';
   }
 }

@@ -1,22 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { InitiatedChannel, UserData } from '../models/user.model';
+import { InitiatedChannel } from '../models/user.model';
 import { DataService } from '../services/app-service/data.service';
-import { UserSectionComponent } from '../user-section/user-section.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ThumbnailComponent } from "../user-section/users/thumbnail.component";
-import { HistoryTimeline } from '../models/historical.model';
-import { HeatmapSelectionComponent } from './heatmap-selection/heatmap-selection.component';
-import { getFormattedDateSince, getTimeSince } from '../helper/date.helper';
-import { moveAnimation, listAnimation, fadeInOut, expandCollapse, fadeInOutSlow, fadeInOutFast, fadeOut, fadeIn } from './user-dashboard.animations';
+import { getTimeSince } from '../helper/date.helper';
+import { moveAnimation, listAnimation, fadeInOut, fadeOut, fadeIn, messageAnimation } from '../animations/general.animations';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { NumberAbbreviatorPipe } from '../pipes/number-abbreviator.pipe';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { getMessagesPerMinute } from '../helper/custom-calc.helper';
-import { ResizeViewHelper } from '../helper/resize-view.helper';
+import { ViewPortService } from '../helper/view-port.service';
 import { TwitchAuthService } from '../services/twitch-service/twitch-auth.service';
 import { TwitchLogin } from '../models/twitch.login.model';
+import { version } from '../general/variables';
 
 @Component({
     selector: 'app-user-dashboard',
@@ -24,11 +21,8 @@ import { TwitchLogin } from '../models/twitch.login.model';
     templateUrl: './user-dashboard.component.html',
     styleUrls: ['./user-dashboard.component.scss'],
     imports: [
-        UserSectionComponent,
         CommonModule,
         FormsModule,
-        ThumbnailComponent,
-        HeatmapSelectionComponent,
         DragDropModule,
         NumberAbbreviatorPipe,
         RouterModule
@@ -38,47 +32,36 @@ import { TwitchLogin } from '../models/twitch.login.model';
         listAnimation,
         fadeOut,
         fadeInOut,
-        expandCollapse,
-        fadeInOutSlow,
-        fadeInOutFast,
-        fadeIn
+        fadeIn,
+        messageAnimation
     ]
 })
 export class UserDashboardComponent implements OnInit, OnDestroy {
-    viewCountHistory: HistoryTimeline[] = [];
     initiatedChannels: InitiatedChannel[] = [];
-    userData: UserData | undefined;
     loading: boolean = false;
     notDismissed: boolean = true;
     username: string = '';
-    lastUsername: string = '';
-    providedUsername: string | null = null;
     info: string = '';
     userAccount: TwitchLogin | undefined;
-
     private subscriptions: Subscription[] = [];
 
+    version = version;
+
     getMessagesPerMinute = getMessagesPerMinute;
-    getFormattedDateSince = getFormattedDateSince;
     getTimeSince = getTimeSince;
 
-    constructor(private route: ActivatedRoute, private router: Router, private dataService: DataService, public viewportService: ResizeViewHelper, public twitchAuthService: TwitchAuthService) {
-        this.subscriptions.push(
-            this.route.paramMap.subscribe(params => {
-                this.providedUsername = params.get('channel');
-                if (this.dataService.connectionEstablished.getValue()) {
-                    this.initiate();
-                }
-            })
-        );
+    constructor(private router: Router, private dataService: DataService, public viewportService: ViewPortService, public twitchAuthService: TwitchAuthService) {
     }
 
     saveDismissed(): void {
         this.notDismissed = false;
-        localStorage.setItem('dismissed', 'true');
+        localStorage.setItem(version + 'dismissed', 'true');
     }
 
     ngOnInit(): void {
+        if (localStorage.getItem(version + 'dismissed')) {
+            this.notDismissed = false;
+        }
         this.loading = true;
 
         const userAccountSubscription = this.twitchAuthService.userAccount$.subscribe({
@@ -94,18 +77,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
             next: (connected) => {
                 if (connected) {
                     this.initiate();
-                }
-            },
-            error: (err) => {
-                console.error(err);
-            }
-        });
-
-        const userDataSubscription = this.dataService.userDataSubject.subscribe({
-            next: (userData) => {
-                // Only update if userData is not manually cleared
-                if (this.userData !== undefined) {
-                    this.userData = userData;
                 }
             },
             error: (err) => {
@@ -132,21 +103,11 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
             }
         });
 
-        this.subscriptions.push(userAccountSubscription, signalRConnectionSubscription, userDataSubscription, onlineStatusSubscription, messageCountSubscription);
-
-        if (localStorage.getItem('dismissed')) {
-            this.notDismissed = false;
-        }
+        this.subscriptions.push(userAccountSubscription, signalRConnectionSubscription, onlineStatusSubscription, messageCountSubscription);
     }
 
     initiate() {
-        if (this.providedUsername) {
-            this.username = this.providedUsername;
-            this.loading = true;
-            this.fetchData();
-        } else {
-            this.fetchInitiatedChannels();
-        }
+        this.fetchInitiatedChannels();
     }
 
     logout(): void {
@@ -192,60 +153,9 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         }
 
         this.info = '';
-        this.lastUsername = this.username;
         this.loading = true;
+        this.dataService.setUserName(this.username);
         this.router.navigate(['c', this.username]);
-    }
-
-    fetchData(): void {
-        const fetchDataSubscription = this.dataService.getUserData(this.username).subscribe({
-            next: (data) => {
-                if (!this.userData) {
-                    this.lastUsername = this.username;
-                    this.dataService.joinChannel(this.username);
-                    this.fetchHistory();
-                }
-                this.userData = data;
-                this.loading = false;
-            },
-            error: (err) => {
-                this.loading = false;
-                this.info = 'An error occurred while fetching data. Please try again later.';
-                this.router.navigate(['']);
-            }
-        });
-        this.subscriptions.push(fetchDataSubscription);
-    }
-
-    fetchHistory(): void {
-        const historySubscription = this.dataService.getViewCountHistory(this.username).subscribe({
-            next: (data) => {
-                this.viewCountHistory = data;
-            },
-            error: (error) => {
-                console.error(error);
-            }
-        });
-        this.subscriptions.push(historySubscription);
-    }
-
-    onHistoryDateSelected(id: string | undefined): void {
-        if (!id) {
-            this.dataService.joinChannel(this.username);
-            this.fetchData();
-            return;
-        }
-
-        this.dataService.leaveChannel(this.username);
-        this.dataService.getHistoryByKey(this.username, id).subscribe({
-            next: (data) => {
-                this.userData = data.statistics;
-            },
-            error: (err) => {
-                this.info = 'An error occurred while fetching historical data. Please try again later.';
-                console.error(err);
-            }
-        });
     }
 
     filteredChannels(): InitiatedChannel[] {
@@ -257,10 +167,6 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
     trackByChannelId(index: number, item: InitiatedChannel): string {
         return item.channelName;
-    }
-
-    isChannelOnline(username: string): boolean {
-        return this.initiatedChannels.find(channel => channel.channelName === username)?.isOnline ?? false;
     }
 
     updateChannelStatus(status: any): void {
@@ -280,16 +186,5 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
                 channel.messageCount = data.messageCount;
             }
         });
-    }
-
-    reset(): void {
-        this.dataService.leaveChannel(this.lastUsername);
-        this.router.navigate(['']);
-        this.fetchInitiatedChannels();
-        this.userData = undefined; // Ensure userData is manually cleared
-        this.viewCountHistory = [];
-        this.username = '';
-        this.info = '';
-        this.loading = false;
     }
 }

@@ -11,7 +11,6 @@ export class DataInterpolationService {
     intervalMs: number
   ): { time: Date; value: number }[] {
     if (data.length === 0) return [];
-
     // Parse the input data
     const parsedData = data.map(entry => ({
       time: new Date(entry.time).getTime(),
@@ -39,8 +38,10 @@ export class DataInterpolationService {
 
   // Method to format the time for display
   formatTime(time: Date): string {
-    const hours = time.getUTCHours().toString().padStart(2, '0');
-    const minutes = time.getUTCMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    const localTime = new Date(time);
+    const localDay = localTime.getDate().toString().padStart(2, '0');
+    const localHours = localTime.getHours().toString().padStart(2, '0');
+    const localMinutes = localTime.getMinutes().toString().padStart(2, '0');
+    return `${localHours}:${localMinutes}`;
   }
 }

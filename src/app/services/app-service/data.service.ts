@@ -5,7 +5,7 @@ import { ChannelMessageCount, ChannelStatus, InitiatedChannel, UserData } from '
 import * as signalR from '@microsoft/signalr';
 import { Result } from '../../models/result';
 import { HistoryData, HistoryTimeline } from '../../models/historical.model';
-import { ChatMessage } from '../../models/chat-message.model';
+import { ChatHistory, TwitchChatMessage } from '../../models/chat-message.model';
 import { backendUrl } from '../../general/variables';
 
 @Injectable({
@@ -16,12 +16,19 @@ export class DataService {
   private reconnectionAttempt = 0;
   private maxReconnectionAttempts = 5;
   private reconnectionDelay = 5000; // 5 seconds
-  private channelName: string = '';
+  private userName: string = '';
+  private lastImageFetch: number = 0;
 
   // Subject for successful connection to SignalR
   connectionEstablished = new BehaviorSubject<boolean>(false);
   // Subject for new User Data coming in from SignalR
-  userDataSubject = new Subject<UserData>();
+  userDataSubject = new BehaviorSubject<UserData>(new UserData());
+  // Subject to handle username updates
+  userNameSubject = new BehaviorSubject<string>('');
+  // Subject to handle historical chat data username updates
+  chatHistorySubject = new Subject<string>();
+  // Subject to handle historical data updates
+  historicalDataSubject = new Subject<HistoryData | undefined>();
   // Subject to handle image URL updates
   imageUrlSubject = new Subject<string>();
   // Subject to handle online status updates
@@ -29,7 +36,27 @@ export class DataService {
   // Subject to handle message count updates
   messageCountSubject = new Subject<ChannelMessageCount>();
   // Subject to handle channel messages
-  messageSubject = new Subject<ChatMessage>();
+  messageSubject = new Subject<TwitchChatMessage>();
+
+  userData$ = this.userDataSubject.asObservable();
+  userName$ = this.userNameSubject.asObservable();
+
+  setUserData(userData: UserData): void {
+    this.userDataSubject.next(userData);
+  }
+
+  getUserData(): UserData {
+    return this.userDataSubject.getValue();
+  }
+
+  setUserName(channelName: string): void {
+    this.userName = channelName;
+    this.userNameSubject.next(channelName);
+  }
+
+  getUserName(): string {
+    return this.userName;
+  }
 
   constructor(private http: HttpClient) {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -86,13 +113,18 @@ export class DataService {
     this.hubConnection.on('ReceiveStatistics', (data: UserData) => {
       this.userDataSubject.next(data);
 
-      if (this.channelName.length === 0) {
+      if (this.userName.length === 0) {
         return;
       }
       // Build the URL for the Twitch preview image using the username from UserData
       // Append timestamp to ensure the browser fetches the latest version of the image
+      // Only fetch the image if the last fetch was more than 60 seconds ago
       const timestamp = new Date().getTime();
-      const imageUrl = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${this.channelName}-440x248.jpg?timestamp=${timestamp}`;
+      if (timestamp - this.lastImageFetch < 60000) {
+        return;
+      }
+      this.lastImageFetch = timestamp;
+      const imageUrl = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${this.userName}-880x496.jpg`;
       this.imageUrlSubject.next(imageUrl);
     });
 
@@ -107,29 +139,29 @@ export class DataService {
     });
 
     // Handle channel messages
-    this.hubConnection.on('ReceiveChannelMessage', (message: ChatMessage) => {
+    this.hubConnection.on('ReceiveChannelMessage', (message: TwitchChatMessage) => {
       this.messageSubject.next(message);
     });
   }
 
   getUserThumbnail(username: string): string {
     const timestamp = new Date().getTime();
-    return `https://static-cdn.jtvnw.net/previews-ttv/live_user_${username}-440x248.jpg?timestamp=${timestamp}`;
+    return `https://static-cdn.jtvnw.net/previews-ttv/live_user_${username}-440x248.jpg`;
   }
 
   joinChannel(channelName: string): void {
-    this.channelName = channelName;
+    this.userName = channelName;
     this.hubConnection.invoke('JoinChannel', channelName)
       .catch(err => console.error('Error while joining channel: ' + err));
   }
 
   leaveChannel(channelName: string): void {
-    this.channelName = '';
+    this.userName = '';
     this.hubConnection.invoke('LeaveChannel', channelName)
       .catch(err => console.error('Error while leaving channel: ' + err));
   }
 
-  getUserData(channelName: string): Observable<UserData> {
+  getUserStats(channelName: string): Observable<UserData> {
     return this.http.get<UserData>(backendUrl + "Twitch/GetChannelStatistics?channelName=" + channelName);
   }
 
@@ -168,5 +200,10 @@ export class DataService {
 
   addTextToObserve(channelName: string, message: string): Observable<void> {
     return this.http.post<void>(backendUrl + "Twitch/AddTextToObserve?channelName=" + channelName + "&message=" + message, {});
+  }
+    
+  getChatHistory(channelName: string, username: string): Observable<ChatHistory[]> {
+    const url = `${backendUrl}Twitch/GetChatHistory?channelName=${encodeURIComponent(channelName)}&username=${encodeURIComponent(username)}`;
+    return this.http.get<ChatHistory[]>(url);
   }
 }

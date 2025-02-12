@@ -1,64 +1,143 @@
-<!-- Channel Info -->
-<div *ngIf="userData" class="position-fixed top-0 start-50 translate-middle-x top-index info-container" @fadeInOut>
-  <button
-    class="btn bg-glass info-btn top-index border-secondary rounded-0 border-0 border-bottom border-end border-start rounded-bottom position-absolute bottom-0 start-50 translate-middle-x"
-    type="button" data-bs-toggle="collapse" data-bs-target="#channelInfo" aria-expanded="false"
-    aria-controls="channelInfo">
-    <i class="fa-solid fa-info-circle text-warning"></i>
-  </button>
-  <div id="channelInfo" class="collapse">
-    <app-channel-info [userData]="userData"></app-channel-info>
+<div class="d-flex position-fixed w-100 h-100 overflow-auto">
+  <!-- Sidebar with Component Toggles -->
+  <div class="sidebar bg-dark text-white p-3 d-flex flex-column">
+    <ul class="nav flex-column text-start">
+      <li class="nav-item dropdown">
+        <button #profileDropdownButton class="btn nav-btn dropdown-toggle text-muted" type="button" id="profileDropdown" (click)="toggleProfileDropdown()"
+          data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fas fa-user text-light" title="Switch Profile"></i>
+          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames"
+            @fadeInOut>Profile</span>
+        </button>
+        <ul class="dropdown-menu bg-glass" aria-labelledby="profileDropdown" style="width: max-content;">
+          <li *ngFor="let profile of profiles">
+            <div class="d-flex justify-content-between align-items-center p-2">
+              <div class="w-100">
+                <button class="btn btn-sm bg-dark text-light rounded-0 rounded-start"
+                  (click)="editProfileName(profile)"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm bg-dark text-light rounded-0 rounded-end" (click)="deleteProfile(profile)"><i
+                    class="fas fa-trash"></i></button>
+              </div>
+              <button class="dropdown-item text-light text-end"
+                [ngClass]="{'fw-bold text-warning': profile.name === activeProfile?.name}"
+                (click)="switchProfile(profile.name)">{{ profile.name }}</button>
+            </div>
+          </li>
+          <li>
+            <hr class="dropdown-divider">
+          </li>
+          <li>
+            <button class="dropdown-item text-success" (click)="addNewProfile()">
+              <i class="fas fa-plus"></i> Add New Profile
+            </button>
+          </li>
+        </ul>
+      </li>
+      <li class="nav-item" *ngFor="let component of components">
+        <button class="btn text-truncate nav-btn text-muted" [class.text-primary]="isActive(component.type)"
+          (click)="toggleComponent(component.type)">
+          <i [ngClass]="component.icon" title="{{ component.name }}"></i>
+          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+            {{ component.name }}
+          </span>
+        </button>
+      </li>
+      <hr class="bg-light">
+      <li class="nav-item">
+        <button class="btn text-truncate nav-btn" (click)="toggleStream()">
+          <i class="fas fa-tv" title="Toggle Stream"></i>
+          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+            Toggle Stream
+          </span>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="btn text-truncate nav-btn" (click)="toggleAnimations()">
+          <i class="fas" [class.fa-chart-area]="settings.showChartAnimations"
+            [class.fa-circle-xmark]="!settings.showChartAnimations" title="Toggle Animations"></i>
+          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+            Toggle Animations
+          </span>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="btn text-truncate nav-btn" (click)="resetLayout()">
+          <i class="fas fa-repeat" title="Reset Components"></i>
+          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+            Reset Components
+          </span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- Spacer to push the Home button to the bottom -->
+    <div class="mt-auto">
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <button class="btn text-truncate nav-btn" (click)="showComponentNames = !showComponentNames">
+            <i class="fas fa-eye" title="{{showComponentNames ? 'Hide' : 'Show'}} Menu"></i>
+            <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+              Hide Menu
+            </span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="btn text-truncate nav-btn" (click)="goToDashboard()">
+            <i class="fas fa-home" title="Home"></i>
+            <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+              Home
+            </span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main Content with Gridster Layout -->
+  <div class="content-wrapper px-4 w-100" *ngIf="userData && !loading; else loadingContent">
+    <gridster [options]="gridsterOptions" class="bg-glass">
+      <gridster-item *ngFor="let item of gridsterLayout" [item]="item" class="bg-glass m-2" @profileViewAnimation>
+        <ng-container *ngFor="let component of components">
+          <ng-container *ngIf="item.type === component.type">
+            <ng-container *ngComponentOutlet="component.component;"></ng-container>
+          </ng-container>
+        </ng-container>
+      </gridster-item>
+    </gridster>
   </div>
 </div>
 
-<!-- Channel Chat -->
-<div *ngIf="userData" class="position-fixed top-0 end-0 me-3 mt-3 top-index info-container" @fadeInOut>
-  <button
-    class="btn bg-glass chat-btn top-index border-secondary rounded-0 border-0 border-bottom border-end border-start rounded-bottom position-absolute bottom-0 end-0 me-3"
-    type="button" data-bs-toggle="collapse" data-bs-target="#channelChat" aria-expanded="false"
-    aria-controls="channelChat">
-    <i class="fa-solid fa-comment-dots text-warning"></i>
-  </button>
-  <div id="channelChat" class="collapse">
-    <div class="card bg-glass border-secondary p-2 rounded-0 rounded-bottom border-top-0">
-      <app-chat-window [username]="username"></app-chat-window>
-    </div>
-  </div>
-</div>
+<app-twitch-stream *ngIf="settings.showStream" @fadeInOut></app-twitch-stream>
+<app-chat-history [channelName]="username" [username]="chatHistoryUsername"></app-chat-history>
 
-<div class="user-section">
-  <div class="row">
-    <!-- Sentiment Analysis -->
-    <div class="col-12 col-md-6 col-lg-4">
-      <app-sentiment-analysis [userData]="userData"></app-sentiment-analysis>
-    </div>
-    <!-- User Information -->
-    <div class="col-12 col-md-6 col-lg-4">
-      <app-peak-activity-periods [username]="username" [userData]="userData"></app-peak-activity-periods>
-    </div>
-    <!-- Audience Engagement -->
-    <div class="col-12 col-md-6 col-lg-4">
-      <app-audience-engagement [userData]="userData"></app-audience-engagement>
-    </div>
+<!-- Loading Template -->
+<ng-template #loadingContent>
+  <div class="d-flex justify-content-center align-items-center w-100 h-100">
+    <i class="fas fa-spider fa-flip text-warning fa-4x"></i>
   </div>
-</div>
+</ng-template>
 
 <!-- Alerts -->
 <div class="toast-container position-fixed top-50 start-50 translate-middle">
-  <div class="toast align-items-center text-bg-info border-0 p-3" role="alert" aria-live="assertive" aria-atomic="true"
-    [class.show]="notDismissed">
+  <div class="toast align-items-center text-bg-info border-0 p-3 w-100" role="alert" aria-live="assertive"
+    aria-atomic="true" [class.show]="notDismissed">
     <div class="d-flex">
       <div class="toast-body">
+        <small>v{{version}}</small>
         <p class="text-dark"><strong class="text-danger">Feature Notice:</strong></p>
         <p>All timeline graphs on this page are fully <strong class="text-danger">scrollable</strong>, allowing you to
           explore the data over different periods.
-          <br><strong class="text-danger">Double click</strong> chart to reset the view.
+          <br><strong class="text-danger">Double click</strong> a chart to reset the view.
           <br><strong class="text-danger">Click</strong> legend items to hide them.
         </p>
-        <p>The data automatically refreshes <strong class="text-danger">every second</strong> to ensure you're
-          viewing the latest insights in real time.</p>
+        <p>The data automatically refreshes <strong class="text-danger">every second</strong>.</p>
         <p>Thumbnails will be updated every <strong class="text-danger">5 minutes</strong>, as Twitch updates them
-          infrequently. This helps in visualizing the current state of the stream.</p>
+          infrequently.</p>
+        <p>Every item on this page is <strong class="text-danger">drag-and-droppable</strong>, aswell as <strong
+            class="text-danger">resizeable</strong>.</p>
+        <p>Each item can be <strong class="text-danger">toggled</strong> by clicking the corresponding button in the
+          <strong class="text-danger">sidebar</strong>.
+        </p>
       </div>
       <button type="button" class="btn-close btn-close-black position-absolute top-0 end-0 m-2" data-bs-dismiss="toast"
         aria-label="Close" (click)="saveDismissed()"></button>

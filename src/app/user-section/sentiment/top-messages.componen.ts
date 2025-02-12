@@ -9,7 +9,7 @@ import { BaseChartDirective } from 'ng2-charts';
     standalone: true,
     template: `
       <div class="row">
-        <div class="card border-secondary bg-dark text-light text-center col-12 col-md-6">
+        <div class="card border-secondary bg-dark text-light text-center px-2 col-12 col-md-6">
           <h5>Top Positive Messages</h5>
           <canvas *ngIf="positiveChartData.datasets[0].data.length > 0"
             baseChart
@@ -18,7 +18,7 @@ import { BaseChartDirective } from 'ng2-charts';
             [type]="'bar'">
           </canvas>
         </div>
-        <div class="card border-secondary bg-dark text-light text-center col-12 col-md-6">
+        <div class="card border-secondary bg-dark text-light text-center px-2 col-12 col-md-6">
           <h5>Top Negative Messages</h5>
           <canvas *ngIf="negativeChartData.datasets[0].data.length > 0"
             baseChart
@@ -84,6 +84,7 @@ export class TopMessagesComponent implements OnInit, OnChanges {
             x: {
                 ticks: {
                     color: 'white',
+                    font: { size: 10 },
                 },
                 grid: {
                     color: 'rgba(255, 255, 255, 0.1)',

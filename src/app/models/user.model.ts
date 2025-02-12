@@ -1,4 +1,6 @@
+import { BotLikeliness } from "./bot-detection.model";
 import { EmoteUsage } from "./emote.model";
+import { RaidStatisticResult } from "./raid-model";
 import { SentimentAnalysis } from "./sentiment.model";
 import { SubscriptionStatistic } from "./subscription-model";
 
@@ -58,26 +60,61 @@ export interface ViewerStatistics {
   peakViewers: number;
 }
 
-export interface UserData {
+export class UserData {
   AverageMessageLength: number;
   EmoteUsage: EmoteUsage[];
-  HostEvents: number;
   LinksShared: number;
   MessageIntervalMs: number;
   PeakActivityPeriods: PeakActivityPeriod;
-  RaidEvents: number;
   SentenceFrequency: { [key: string]: number };
   SentimentAnalysis: SentimentAnalysis;
   SubscriptionStatistic: SubscriptionStatistic;
-  TopChatters: { [key: string]: number };
+  BotLikeliness: BotLikeliness;
   TotalBans: TotalBans;
   TotalMessages: number;
   TotalTimeouts: TotalTimeouts;
   TotalUsers: number;
   UniqueWords: number;
+  UniqueChatters: number;
   WordFrequency: { [key: string]: number };
   ChannelMetrics: ChannelMetrics;
   IsOnline: boolean;
+  RaidStatistic: RaidStatisticResult | undefined;
+
+  constructor() {
+    this.AverageMessageLength = 0;
+    this.EmoteUsage = [];
+    this.LinksShared = 0;
+    this.MessageIntervalMs = 0;
+    this.PeakActivityPeriods = {
+      messagesOverTime: {},
+      subOnlyMessagesOverTime: {},
+      emoteOnlyMessagesOverTime: {},
+      slowModeMessagesOverTime: {},
+      trend: Trend.Stable
+    };
+    this.SentenceFrequency = {};
+    this.SentimentAnalysis = new SentimentAnalysis();
+    this.SubscriptionStatistic = new SubscriptionStatistic();
+    this.BotLikeliness = new BotLikeliness();
+    this.TotalBans = { TotalBans: 0, BanReasons: [] };
+    this.TotalMessages = 0;
+    this.TotalTimeouts = { TotalTimeouts: 0, totalTimeoutDuration: 0, AverageTimeoutDuration: 0, timeoutReasons: [] };
+    this.TotalUsers = 0;
+    this.UniqueWords = 0;
+    this.UniqueChatters = 0;
+    this.WordFrequency = {};
+    this.ChannelMetrics = {
+      viewerStatistics: { currentViewers: 0, averageViewers: 0, peakViewers: 0 },
+      currentGame: "",
+      uptime: "",
+      viewersOverTime: {},
+      totalWatchTime: 0,
+      trend: Trend.Stable
+    };
+    this.IsOnline = false;
+    this.RaidStatistic = undefined;
+  }
 }
 
 export interface PeakActivityPeriod {
@@ -89,13 +126,13 @@ export interface PeakActivityPeriod {
 }
 
 export interface TotalBans {
-  totalBans: number;
-  banReasons: any[];
+  TotalBans: number;
+  BanReasons: any[];
 }
 
 export interface TotalTimeouts {
-  totalTimeouts: number;
+  TotalTimeouts: number;
   totalTimeoutDuration: number;
-  averageTimeoutDuration: number;
+  AverageTimeoutDuration: number;
   timeoutReasons: any[];
 }

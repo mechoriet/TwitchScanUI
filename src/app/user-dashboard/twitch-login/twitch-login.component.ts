@@ -17,7 +17,6 @@ export class TwitchLoginComponent implements OnInit {
         // Get the 'code' query parameter from the URL
         this.route.queryParams.subscribe((params) => {
             const code = params['code'];
-            console.log(code);
             if (code) {
                 // Handle the callback by exchanging the code for tokens
                 this.twitchAuthService.handleAuthCallback(code).subscribe({

@@ -1,16 +1,19 @@
-import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
-import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
+import { fadeInOut } from '../../animations/general.animations';
 import { Trend, UserData } from '../../models/user.model';
+import { Subscription } from 'rxjs';
+import { DataService } from '../../services/app-service/data.service';
+import { SettingsService } from '../../services/app-service/settings.service';
 
 @Component({
   selector: 'app-subscriptions-over-time',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
+    <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="chartData.datasets[0].data.length > 1; else noSubs">
       <h5>Subscriptions Over Time (UTC)
           <i
             class="fa-solid"
@@ -25,7 +28,8 @@ import { Trend, UserData } from '../../models/user.model';
           ></i></h5>
 
       <!-- Line Chart for Subscriptions Over Time -->
-      <canvas (dblclick)="resetZoom()"        
+      <canvas (dblclick)="resetZoom()" 
+        class="no-drag px-2"       
         baseChart
         [data]="chartData"
         [options]="chartOptions"
@@ -33,48 +37,46 @@ import { Trend, UserData } from '../../models/user.model';
       >
       </canvas>
     </div>
+
+    <ng-template #noSubs>
+      <div class="card border-secondary bg-dark text-light text-center h-100 m-0 justify-content-center">
+        <h5>Not enough Subscription Data Available</h5>
+      </div>
+    </ng-template>
   `,
-  styles: [
-    `
-      .card {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        margin: 0.5rem 0;
-      }
-      canvas {
-        width: 100% !important;
-        height: 400px !important;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 0.5rem;
-        text-align: center;
-      }
-      th {
-        background-color: #495057;
-        color: white;
-      }
-    `,
-  ],
   imports: [CommonModule, BaseChartDirective],
-  animations: [
-    fadeInOut
-  ]
 })
-export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
+export class SubscriptionsOverTimeComponent implements OnDestroy {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input({ required: true }) userData!: UserData;
-  @Input() redrawTrigger: boolean = false;
+  userData: UserData;
+  subscriptions: Subscription = new Subscription();
 
   Trend = Trend;
 
-  constructor(private interpolationService: DataInterpolationService) { }
+  constructor(private interpolationService: DataInterpolationService, private dataService: DataService, private settingsService: SettingsService) {
+    this.userData = dataService.getUserData();
+    this.subscriptions.add(this.dataService.userData$.subscribe((userData) => {
+      this.userData = userData;
+      this.updateChartData();
+    }));
+
+    this.subscriptions.add(this.settingsService.settings$.subscribe((s) => {
+      if (this.chartOptions) {
+        // Update the animation setting
+        this.chartOptions.animation = s.showChartAnimations;
+    
+        // Force Chart.js to re-render the chart with the new options
+        if (this.chart && this.chart.chart) {
+          this.chart.chart.config.options = this.chartOptions;
+          this.chart.chart.update();
+        }
+      }
+    }));
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
 
   // Chart Data Structure
   chartData: ChartConfiguration<'line'>['data'] = {
@@ -99,12 +101,12 @@ export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: 'white' },
+        labels: { color: 'white', font: { size: 10 } },
       },
       tooltip: {
         enabled: true,
       },
-      zoom: {       
+      zoom: {
         pan: {
           enabled: true
         },
@@ -145,23 +147,19 @@ export class SubscriptionsOverTimeComponent implements OnInit, OnChanges {
         borderWidth: 2,
       },
     },
+    animation: false
   };
-
-  ngOnInit(): void {
-    this.updateChartData();
-  }
-
-  ngOnChanges(): void {
-    this.updateChartData();
-  }
 
   resetZoom(): void {
     this.chart?.chart?.resetZoom();
   }
 
   updateChartData(): void {
-    const subscriptions = this.userData?.SubscriptionStatistic.subscriptionsOverTime;
-    if (!subscriptions || subscriptions.length === 0) return;
+    const subscriptions = this.userData?.SubscriptionStatistic?.subscriptionsOverTime;
+    if (!subscriptions || subscriptions.length === 0) {
+      this.chartData.datasets[0].data = [];
+      return;
+    }
 
     // Prepare the data for interpolation
     const rawData = subscriptions.map(sub => ({

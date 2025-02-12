@@ -50,10 +50,10 @@ table {
 }
 
 .border-glow-transition {
-    transition: all 0.3s ease;
+    transition: border-bottom 0.15s ease, box-shadow 0.15s ease;
 }
 
-.border-glow {
+.border-glow, .channel-card:hover {
     border-bottom: 1px solid #434567 !important;
     box-shadow: 0px 0px 5px -1px rgba(155, 155, 255, 0.8);
 }
@@ -67,13 +67,6 @@ table {
     font-size: 1.25rem;
     font-weight: 500;
     color: #fff;
-}
-
-.btn-controls {
-    -webkit-transform: translateY(100%) !important;
-    -moz-transform: translateY(100%) !important;
-    -ms-transform: translateY(100%) !important;
-    transform: translateY(100%) !important;
 }
 
 .history-container {
@@ -111,13 +104,6 @@ table {
     font-size: 4rem;
 }
 
-.demo-alert {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    line-height: 10px;
-}
-
 .sticky-input {
     transition: box-shadow 0.3s ease;
 }
@@ -126,12 +112,6 @@ table {
     box-shadow: 0px 0px 8px -1px rgba(155, 155, 255, 0.8);
 }
 
-.reload-btn {
-    padding-top: 4px;
-    font-size: 18px;
-}
-
-// Drag and Drop
 .cdk-drag-preview {
     opacity: 0.8;
     background: rgba(0, 0, 0, 0.6);
@@ -145,23 +125,6 @@ table {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-
-// Animations
-.spin {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-// Media Queries
 @media (max-width: 768px) {
     .channel-container {
         width: 100vw;

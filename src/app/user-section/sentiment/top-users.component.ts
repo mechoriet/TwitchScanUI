@@ -1,37 +1,45 @@
 import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { SentimentUser } from '../../models/sentiment.model';
 import { CommonModule } from '@angular/common';
-import { ChartConfiguration } from 'chart.js';
+import { ChartConfiguration, ChartEvent } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
+import { SettingsService } from '../../services/app-service/settings.service';
+import { Subscription } from 'rxjs';
+import { DataService } from '../../services/app-service/data.service';
 
 @Component({
   selector: 'app-top-users',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center">
+    <div class="card border-0 bg-dark text-light text-center px-2"
+        *ngIf="userChartData.datasets[0].data.length > 0; else noData">
       <h5>{{ title }}</h5>
 
       <!-- Bar Chart for Top Users -->
       <canvas
-        *ngIf="userChartData.datasets[0].data.length > 0"
         baseChart
         [data]="userChartData"
         [options]="chartOptions"
         [type]="'bar'"
+        class="no-drag"
       >
       </canvas>
     </div>
+
+    <ng-template #noData>
+      <div class="card border-0 bg-dark text-light text-center justify-content-center">
+        <h5>No User Data Available</h5>
+      </div>
+    </ng-template>
   `,
   styles: [
     `
       .card {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        margin: 0.5rem 0;
+        height: 100% !important;
       }
       canvas {
         width: 100% !important;
-        height: 400px !important;
+        height: 100% !important;
       }
     `,
   ],
@@ -41,18 +49,24 @@ export class TopUsersComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   @Input() title: string = '';
   @Input() users: SentimentUser[] = [];
-  @Input() positive: boolean = true;
-  @Input() redrawTrigger: boolean = false;
+  subscriptions: Subscription = new Subscription();
 
-  // Chart Data Structure
+  // Updated Chart Data Structure to include multiple datasets
   userChartData: ChartConfiguration<'bar'>['data'] = {
     labels: [],
     datasets: [
       {
-        label: 'Sentiment (%)',
+        label: 'Messages',
         data: [],
-        backgroundColor: '#4285F4',
-        borderColor: '#4285F4',
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+      },
+      {
+        label: 'Sentiment',
+        data: [],
+        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+        borderColor: 'rgba(153, 102, 255, 1)',
         borderWidth: 1,
       },
     ],
@@ -64,7 +78,7 @@ export class TopUsersComponent implements OnInit, OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false, // Hide legend for simplicity
+        display: true, // Show legend to differentiate datasets
       },
       tooltip: {
         enabled: true,
@@ -74,6 +88,7 @@ export class TopUsersComponent implements OnInit, OnChanges {
       x: {
         ticks: {
           color: 'white',
+          font: { size: 10 },
         },
         grid: {
           color: 'rgba(255, 255, 255, 0.1)',
@@ -89,20 +104,27 @@ export class TopUsersComponent implements OnInit, OnChanges {
         beginAtZero: true,
       },
     },
-    animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart',
-    },
+    animation: false,
+    onClick: (event, activeElements) => this.onChartClick(event, activeElements),
   };
+
+  constructor(private settingsService: SettingsService, private dataService: DataService) {
+    this.subscriptions.add(this.settingsService.settings$.subscribe((s) => {
+      if (this.chartOptions) {
+        // Update the animation setting
+        this.chartOptions.animation = s.showChartAnimations;
+
+        // Force Chart.js to re-render the chart with the new options
+        if (this.chart && this.chart.chart) {
+          this.chart.chart.config.options = this.chartOptions;
+          this.chart.chart.update();
+        }
+      }
+    }));
+  }
 
   ngOnInit(): void {
     this.updateChartData();
-
-    // Change bar color to red if negative sentiment
-    if (!this.positive) {
-      this.userChartData.datasets[0].backgroundColor = 'rgba(255, 99, 132, 0.6)';
-      this.userChartData.datasets[0].borderColor = 'rgba(255,99,132,1)';
-    }
   }
 
   ngOnChanges(): void {
@@ -110,12 +132,23 @@ export class TopUsersComponent implements OnInit, OnChanges {
   }
 
   updateChartData(): void {
-    // Populate chart data based on the users' average positive sentiment
-    this.userChartData.labels = this.users.map((user) => user.username);
-    this.userChartData.datasets[0].data = this.users.map(
-      (user) => user.averageCompound * 100
-    );
-    
+    // Update chart data based on users array
+    this.userChartData.labels = this.users.map(user => user.username);
+    this.userChartData.datasets[0].data = this.users.map(user => user.messageCount);
+    this.userChartData.datasets[1].data = this.users.map(user => user.averageCompound * 100);
+
     this.chart?.chart?.update();
+  }
+
+  onChartClick(event: ChartEvent, activeElements: any[]): void {
+    if (activeElements.length > 0) {
+      const chartElement = activeElements[0];
+      const index = chartElement.index;
+      const username = this.userChartData.labels ? this.userChartData.labels[index] as string : undefined;
+
+      if (username) {
+        this.dataService.chatHistorySubject.next(username);
+      }
+    }
   }
 }

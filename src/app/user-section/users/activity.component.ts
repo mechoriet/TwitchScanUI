@@ -1,30 +1,22 @@
-import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { ThumbnailComponent } from './thumbnail.component';
 import { Trend, UserData } from '../../models/user.model';
-import { ChannelMetricsComponent } from './channel-metric.component';
+import { ViewerMetricComponent } from './viewer-metric.component';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 import { getTimeSince } from '../../helper/date.helper';
-import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
+import { fadeInOut } from '../../animations/general.animations';
+import { DataService } from '../../services/app-service/data.service';
+import { Subscription } from 'rxjs';
+import { SettingsService } from '../../services/app-service/settings.service';
 
 @Component({
   selector: 'app-peak-activity-periods',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light">
-      <h5 (click)="updateChartData()"
-        class="pointer"
-        data-bs-toggle="collapse"
-        data-bs-target="#peakActivityCollapse"
-        aria-expanded="true"
-        aria-controls="peakActivityCollapse">
-        <i class="fa-solid fa-comments me-2 text-warning"></i> Activity
-      </h5>
-      <div id="peakActivityCollapse" class="collapse show">        
-        <!-- Chart -->
-        <div class="card border-secondary bg-dark text-light text-center" *ngIf="chartData.datasets[0].data.length > 0" @fadeInOut>
+    <div class="card border-secondary bg-dark text-light h-100 text-center m-0 px-2" *ngIf="chartData.datasets[0].data.length > 0; else noData">
           <h5>Messages over time (UTC)
           <i
             class="fa-solid"
@@ -37,51 +29,57 @@ import { fadeInOut } from '../../user-dashboard/user-dashboard.animations';
                 userData.PeakActivityPeriods.trend === Trend.Decreasing
             }"
           ></i></h5>
-          <canvas (dblclick)="resetZoom()"            
+          <canvas (dblclick)="resetZoom()"    
+          class="no-drag px-2"               
             baseChart
             [data]="chartData"
             [options]="chartOptions"
             [type]="'line'"
           >
           </canvas>
-        </div> 
-        <!-- Channel Metrics -->
-        <app-channel-metrics [metrics]="userData.ChannelMetrics"></app-channel-metrics>
-        <!-- Thumbnail -->
-        <app-thumbnail [username]="username"></app-thumbnail>  
-      </div>
     </div>
+
+    <ng-template #noData>
+      <div class="card border-secondary bg-dark text-light text-center h-100 m-0 justify-content-center">
+        <h5>No Message Data Available</h5>
+      </div>
+    </ng-template>
   `,
-  styles: [
-    `
-      .card {
-        border: 1px solid #ccc;
-        padding: 1rem;
-        margin: 0.5rem 0;
-      }
-      canvas {
-        width: 100% !important;
-        height: 400px !important;
-      }
-      .pointer {
-        cursor: pointer;
-      }
-    `,
-  ],
-  imports: [CommonModule, BaseChartDirective, ThumbnailComponent, ChannelMetricsComponent],
-  animations: [
-    fadeInOut
-  ]
+  imports: [CommonModule, BaseChartDirective, ThumbnailComponent, ViewerMetricComponent],
 })
-export class ActivityComponent implements OnInit, OnChanges {
+export class MessagesOverTimeComponent implements OnDestroy {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input({ required: true }) userData!: UserData;
-  @Input({ required: true }) username: string = '';
+  userData!: UserData;
+  username!: string;
+  subscriptions: Subscription = new Subscription();
+
+  constructor(private dataInterpolationService: DataInterpolationService, public dataService: DataService, private settingsService: SettingsService) {
+    this.userData = dataService.getUserData();
+    this.subscriptions.add(this.dataService.userData$.subscribe((userData) => {
+      this.userData = userData;
+      this.updateChartData();
+    }));
+
+    this.subscriptions.add(this.settingsService.settings$.subscribe((s) => {
+      if (this.chartOptions) {
+        // Update the animation setting
+        this.chartOptions.animation = s.showChartAnimations;
+    
+        // Force Chart.js to re-render the chart with the new options
+        if (this.chart && this.chart.chart) {
+          this.chart.chart.config.options = this.chartOptions;
+          this.chart.chart.update();
+        }
+      }
+    }));
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
 
   getTimeSince = getTimeSince;
-  Trend = Trend;  
-
-  constructor(private dataInterpolationService: DataInterpolationService) { }
+  Trend = Trend;
 
   chartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
@@ -134,7 +132,7 @@ export class ActivityComponent implements OnInit, OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: 'white' },
+        labels: { color: 'white', font: { size: 10 } },
       },
       tooltip: {
         enabled: true,
@@ -179,15 +177,8 @@ export class ActivityComponent implements OnInit, OnChanges {
         borderWidth: 2,
       },
     },
+    animation: false
   };
-
-  ngOnInit(): void {
-    this.updateChartData();
-  }
-
-  ngOnChanges(): void {
-    this.updateChartData();
-  }
 
   resetZoom(): void {
     this.chart?.chart?.resetZoom();
