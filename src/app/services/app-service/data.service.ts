@@ -72,7 +72,6 @@ export class DataService {
     this.hubConnection
       .start()
       .then(() => {
-        console.log('SignalR Connection started');
         this.reconnectionAttempt = 0; // Reset reconnection attempts on successful connection
         this.connectionEstablished.next(true);
       })
@@ -83,17 +82,14 @@ export class DataService {
       });
 
     this.hubConnection.onreconnected(() => {
-      console.log('Reconnected to the SignalR hub.');
       this.reconnectionAttempt = 0;
       this.connectionEstablished.next(true);
     });
 
     this.hubConnection.onreconnecting(() => {
-      console.log('Attempting to reconnect to SignalR hub...');
     });
 
     this.hubConnection.onclose(() => {
-      console.log('SignalR connection closed.');
       this.scheduleReconnection();
       this.connectionEstablished.next(false);
     });
@@ -102,10 +98,8 @@ export class DataService {
   private scheduleReconnection(): void {
     if (this.reconnectionAttempt < this.maxReconnectionAttempts) {
       this.reconnectionAttempt++;
-      console.log(`Reconnection attempt ${this.reconnectionAttempt}`);
       setTimeout(() => this.startConnection(), this.reconnectionDelay);
     } else {
-      console.error('Max reconnection attempts reached. Could not reconnect to SignalR.');
     }
   }
 

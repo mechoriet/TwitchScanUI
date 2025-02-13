@@ -14,6 +14,7 @@ import { ChatWindowComponent } from '../users/chat-window/chat-window.component'
 import { HeatmapSelectionComponent } from '../../user-dashboard/heatmap-selection/heatmap-selection.component';
 import { EmoteUsageComponent } from '../message/emote-usage.component';
 import { BotLikelinessCurrentComponent } from '../users/bot-detection/bot-likeliness-current.component';
+import { TopBitsComponent } from '../message/top-bits.component';
 
 export enum ComponentType {
     ChannelInfo = 'ChannelInfo',
@@ -29,6 +30,7 @@ export enum ComponentType {
     TopChatter = 'TopChatter',
     SentenceFrequency = 'SentenceFrequency',
     EmoteUsage = 'EmoteUsage',
+    TopBitsCheered = 'TopBitsCheered',
     HeatmapSelection = 'HeatmapSelection',
     SuspiciousActivity = 'SuspiciousActivity',
 }
@@ -111,6 +113,12 @@ export const COMPONENTS = [
         type: ComponentType.EmoteUsage,
         icon: 'fa-solid fa-smile',
         component: EmoteUsageComponent
+    },
+    {
+        name: 'Top Bits Cheered',
+        type: ComponentType.TopBitsCheered,
+        icon: 'fa-solid fa-gem',
+        component: TopBitsComponent
     },
     {
         name: 'Historical Heatmap',

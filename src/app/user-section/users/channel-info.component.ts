@@ -79,7 +79,7 @@ import { Subscription } from 'rxjs';
             </tr>
             <tr>
                 <th class="text-start p-0 px-1 w-100 border-secondary text-warning">
-                    <i class="fa-solid me-1 fa-users-between-lines"></i> Total Raids
+                    <i class="fa-solid me-1 fa-users-between-lines"></i> Total Raiders
                 </th>
                 <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.RaidStatistic?.totalRaids }}</td>
             </tr>

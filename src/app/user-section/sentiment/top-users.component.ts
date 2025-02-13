@@ -21,7 +21,7 @@ import { DataService } from '../../services/app-service/data.service';
         [data]="userChartData"
         [options]="chartOptions"
         [type]="'bar'"
-        class="no-drag"
+        class="canvas no-drag"
       >
       </canvas>
     </div>

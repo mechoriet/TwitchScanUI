@@ -32,7 +32,7 @@ import { Subscription } from 'rxjs';
         </div>
     </div>
   `,
-  imports: [TopUsersComponent, CommonModule, TopMessagesComponent],
+  imports: [TopUsersComponent, CommonModule],
 })
 export class SentimentAnalysisComponent implements OnDestroy {
   userData!: UserData;

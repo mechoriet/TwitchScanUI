@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
-import { fadeInOut } from '../../animations/general.animations';
 import { Trend, UserData } from '../../models/user.model';
 import { Subscription } from 'rxjs';
 import { DataService } from '../../services/app-service/data.service';
@@ -13,28 +12,26 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-subscriptions-over-time',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="chartData.datasets[0].data.length > 1; else noSubs">
-      <h5>Subscriptions Over Time (UTC)
-          <i
-            class="fa-solid"
-            [ngClass]="{
-              'trend-stable fa-minus':
-                userData.SubscriptionStatistic.trend === Trend.Stable,
-              'trend-up fa-arrow-up':
-                userData.SubscriptionStatistic.trend === Trend.Increasing,
-              'trend-down fa-arrow-down':
-                userData.SubscriptionStatistic.trend === Trend.Decreasing
-            }"
-          ></i></h5>
+    <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="hasData(); else noSubs">
+      <h5>
+        Subscriptions Over Time (UTC)
+        <i
+          class="fa-solid"
+          [ngClass]="{
+            'trend-stable fa-minus': userData.SubscriptionStatistic.trend === Trend.Stable,
+            'trend-up fa-arrow-up': userData.SubscriptionStatistic.trend === Trend.Increasing,
+            'trend-down fa-arrow-down': userData.SubscriptionStatistic.trend === Trend.Decreasing
+          }"
+        ></i>
+      </h5>
 
-      <!-- Line Chart for Subscriptions Over Time -->
+      <!-- Mixed Chart: Line for Subscriptions and Bar for Bits Cheered -->
       <canvas (dblclick)="resetZoom()" 
-        class="no-drag px-2"       
-        baseChart
-        [data]="chartData"
-        [options]="chartOptions"
-        [type]="'line'"
-      >
+              class="no-drag px-2"       
+              baseChart
+              [data]="chartData"
+              [options]="chartOptions"
+              [type]="'bar'">
       </canvas>
     </div>
 
@@ -53,7 +50,11 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
 
   Trend = Trend;
 
-  constructor(private interpolationService: DataInterpolationService, private dataService: DataService, private settingsService: SettingsService) {
+  constructor(
+    private interpolationService: DataInterpolationService,
+    private dataService: DataService,
+    private settingsService: SettingsService
+  ) {
     this.userData = dataService.getUserData();
     this.subscriptions.add(this.dataService.userData$.subscribe((userData) => {
       this.userData = userData;
@@ -78,12 +79,23 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  // Chart Data Structure
-  chartData: ChartConfiguration<'line'>['data'] = {
+  // Helper to decide if there is any data to show
+  hasData(): boolean {
+    return (
+      (this.chartData.datasets[0].data && (this.chartData.datasets[0].data as any[]).length > 1) ||
+      (this.chartData.datasets[1].data && (this.chartData.datasets[1].data as any[]).length > 0)
+    );
+  }
+
+  // Update the chartData to include two datasets:
+  // - Subscriptions (as a line chart)
+  // - Bits Cheered (as a bar chart)
+  chartData: ChartConfiguration<any>['data'] = {
     labels: [],
     datasets: [
       {
         label: 'Subscriptions',
+        type: 'line', // Explicitly set dataset type
         data: [],
         borderColor: '#1b9e77',
         backgroundColor: 'rgba(27, 158, 119, 0.2)',
@@ -92,11 +104,20 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
         pointRadius: 0,
         pointHitRadius: 10,
       },
+      {
+        label: 'Bits Cheered',
+        type: 'bar',
+        data: [],
+        yAxisID: 'y1', // Use a different y-axis
+        backgroundColor: 'rgba(208, 99, 255, 0.2)',
+        borderColor: 'rgba(208, 99, 255, 1)',
+        borderWidth: 1,
+      },
     ],
   };
 
-  // Chart Options
-  chartOptions: ChartConfiguration<'line'>['options'] = {
+  // Update chart options to include a second y-axis (y1) for the bits dataset
+  chartOptions: ChartConfiguration<any>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -114,7 +135,6 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
           wheel: {
             enabled: true,
           },
-
           pinch: {
             enabled: true
           },
@@ -132,6 +152,7 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
         },
       },
       y: {
+        position: 'left',
         ticks: {
           color: 'white',
         },
@@ -140,6 +161,16 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
         },
         beginAtZero: true,
         min: 0,
+      },
+      y1: {
+        position: 'right',
+        ticks: {
+          color: 'white',
+        },
+        grid: {
+          drawOnChartArea: false, // Prevents grid lines from y1 overlapping with the chart area
+        },
+        beginAtZero: true,
       },
     },
     elements: {
@@ -155,28 +186,51 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
   }
 
   updateChartData(): void {
+    // --- Process Subscriptions Data ---
     const subscriptions = this.userData?.SubscriptionStatistic?.subscriptionsOverTime;
     if (!subscriptions || subscriptions.length === 0) {
       this.chartData.datasets[0].data = [];
-      return;
+      // Optionally clear labels if no data exists
+      // this.chartData.labels = [];
+    } else {
+      // Prepare and interpolate subscriptions data
+      const rawData = subscriptions.map(sub => ({
+        time: sub.key,
+        value: sub.value,
+      }));
+
+      const interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000); // 1-minute interval
+
+      // Set labels based on the subscription timestamps
+      this.chartData.labels = interpolatedData.map(entry =>
+        this.interpolationService.formatTime(entry.time)
+      );
+      this.chartData.datasets[0].data = interpolatedData.map(entry => entry.value);
     }
 
-    // Prepare the data for interpolation
-    const rawData = subscriptions.map(sub => ({
-      time: sub.key,
-      value: sub.value,
-    }));
+    // --- Process Bits Cheered Data ---
+    const bitsDataObj = this.userData?.PeakActivityPeriods.bitsOverTime;
+    if (bitsDataObj) {
+      // Convert the bits object into an array of { time, value } objects.
+      const rawBitsData = Object.entries(bitsDataObj)
+        .map(([key, value]) => ({ time: key, value }))
+        .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
-    // Use the interpolation service to fill in missing values
-    const interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000); // 1-minute interval
+      // Interpolate the bits data similarly (if needed)
+      const interpolatedBits = this.interpolationService.interpolateData(rawBitsData, 60 * 1000);
 
-    // Map the complete data to chart labels and dataset
-    this.chartData.labels = interpolatedData.map(entry =>
-      this.interpolationService.formatTime(entry.time)
-    );
-    this.chartData.datasets[0].data = interpolatedData.map(entry => entry.value);
+      // If for some reason there were no subscriptions to generate labels, use bits labels.
+      if (!this.chartData.labels?.length && interpolatedBits.length) {
+        this.chartData.labels = interpolatedBits.map(entry =>
+          this.interpolationService.formatTime(entry.time)
+        );
+      }
+      this.chartData.datasets[1].data = interpolatedBits.map(entry => entry.value);
+    } else {
+      this.chartData.datasets[1].data = [];
+    }
 
-    // Update chart
+    // Finally, update the chart
     this.chart?.chart?.update();
   }
 }

@@ -77,6 +77,7 @@ export class UserData {
   UniqueWords: number;
   UniqueChatters: number;
   WordFrequency: { [key: string]: number };
+  BitsCheeredStatistic: Array<{ key: string; value: number }>;
   ChannelMetrics: ChannelMetrics;
   IsOnline: boolean;
   RaidStatistic: RaidStatisticResult | undefined;
@@ -91,6 +92,7 @@ export class UserData {
       subOnlyMessagesOverTime: {},
       emoteOnlyMessagesOverTime: {},
       slowModeMessagesOverTime: {},
+      bitsOverTime: {},
       trend: Trend.Stable
     };
     this.SentenceFrequency = {};
@@ -104,6 +106,7 @@ export class UserData {
     this.UniqueWords = 0;
     this.UniqueChatters = 0;
     this.WordFrequency = {};
+    this.BitsCheeredStatistic = [];
     this.ChannelMetrics = {
       viewerStatistics: { currentViewers: 0, averageViewers: 0, peakViewers: 0 },
       currentGame: "",
@@ -122,6 +125,7 @@ export interface PeakActivityPeriod {
   subOnlyMessagesOverTime: { [key: string]: number };
   emoteOnlyMessagesOverTime: { [key: string]: number };
   slowModeMessagesOverTime: { [key: string]: number };
+  bitsOverTime: { [key: string]: number };
   trend: Trend;
 }
 

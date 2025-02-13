@@ -35,10 +35,8 @@ import { SettingsService } from '../../services/app-service/settings.service';
   `,
   imports: [
     CommonModule,
-    BaseChartDirective,
-    SubscriptionSummaryComponent,
-    SubscriptionsOverTimeComponent,
-  ],
+    BaseChartDirective
+],
 })
 export class TopSubscriberComponent implements OnDestroy {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;

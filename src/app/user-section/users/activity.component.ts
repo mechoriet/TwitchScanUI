@@ -2,12 +2,9 @@ import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
-import { ThumbnailComponent } from './thumbnail.component';
 import { Trend, UserData } from '../../models/user.model';
-import { ViewerMetricComponent } from './viewer-metric.component';
 import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
 import { getTimeSince } from '../../helper/date.helper';
-import { fadeInOut } from '../../animations/general.animations';
 import { DataService } from '../../services/app-service/data.service';
 import { Subscription } from 'rxjs';
 import { SettingsService } from '../../services/app-service/settings.service';
@@ -45,7 +42,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
       </div>
     </ng-template>
   `,
-  imports: [CommonModule, BaseChartDirective, ThumbnailComponent, ViewerMetricComponent],
+  imports: [CommonModule, BaseChartDirective],
 })
 export class MessagesOverTimeComponent implements OnDestroy {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
