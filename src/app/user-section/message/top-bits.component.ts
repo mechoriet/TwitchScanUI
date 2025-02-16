@@ -126,7 +126,7 @@ export class TopBitsComponent implements OnDestroy {
       values.push(value);
     });
     
-    this.bitChartData.labels = keys;
+    this.bitChartData.labels = keys.slice(0, 10);
     this.bitChartData.datasets[0].data = values.slice(0, 10);
     this.chart?.chart?.update();
   }
