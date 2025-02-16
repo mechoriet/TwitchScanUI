@@ -188,49 +188,40 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
   updateChartData(): void {
     // --- Process Subscriptions Data ---
     const subscriptions = this.userData?.SubscriptionStatistic?.subscriptionsOverTime;
+    let interpolatedData: { time: Date; value: number }[] = []; // Declare interpolatedData here
+  
     if (!subscriptions || subscriptions.length === 0) {
       this.chartData.datasets[0].data = [];
-      // Optionally clear labels if no data exists
-      // this.chartData.labels = [];
+      this.chartData.labels = [];
     } else {
-      // Prepare and interpolate subscriptions data
       const rawData = subscriptions.map(sub => ({
         time: sub.key,
         value: sub.value,
       }));
-
-      const interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000); // 1-minute interval
-
-      // Set labels based on the subscription timestamps
+  
+      interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000);
       this.chartData.labels = interpolatedData.map(entry =>
         this.interpolationService.formatTime(entry.time)
       );
       this.chartData.datasets[0].data = interpolatedData.map(entry => entry.value);
     }
-
+  
     // --- Process Bits Cheered Data ---
     const bitsDataObj = this.userData?.PeakActivityPeriods.bitsOverTime;
     if (bitsDataObj) {
-      // Convert the bits object into an array of { time, value } objects.
-      const rawBitsData = Object.entries(bitsDataObj)
-        .map(([key, value]) => ({ time: key, value }))
-        .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-
-      // Interpolate the bits data similarly (if needed)
-      const interpolatedBits = this.interpolationService.interpolateData(rawBitsData, 60 * 1000);
-
-      // If for some reason there were no subscriptions to generate labels, use bits labels.
-      if (!this.chartData.labels?.length && interpolatedBits.length) {
-        this.chartData.labels = interpolatedBits.map(entry =>
-          this.interpolationService.formatTime(entry.time)
-        );
-      }
-      this.chartData.datasets[1].data = interpolatedBits.map(entry => entry.value);
+      const rawData = Object.entries(bitsDataObj).map(([time, value]) => ({
+        time: this.interpolationService.formatTime(new Date(time)),
+        value,
+      }));
+      // Align bits data with interpolated subscription times
+      this.chartData.datasets[1].data = interpolatedData.map(entry => 
+        rawData.find(rawEntry => rawEntry.time === this.interpolationService.formatTime(entry.time))?.value || 0
+      );
     } else {
       this.chartData.datasets[1].data = [];
     }
-
-    // Finally, update the chart
+  
+    // Update the chart
     this.chart?.chart?.update();
   }
 }
