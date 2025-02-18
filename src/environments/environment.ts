@@ -4,4 +4,5 @@ export const environment = {
   backendUrl: 'https://localhost:44309/',
   twitchEmbedUrl: 'localhost',
   frontendUrl: 'http://localhost:4200/',
+  twitchappid: '<FILLIN Client ID>',
 };

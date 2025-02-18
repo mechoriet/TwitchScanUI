@@ -5,13 +5,12 @@ import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { TwitchLogin } from '../../models/twitch.login.model';
 import { DataService } from '../app-service/data.service';
-import { backendUrl, frontendUrl } from '../../general/variables';
+import { backendUrl, frontendUrl, TwitchClientId } from '../../general/variables';
 
 @Injectable({
     providedIn: 'root',
 })
 export class TwitchAuthService {
-    private clientId = 'otz0lwdmgk9zapx2jnuyh32do1qgj7';
     private redirectUri = frontendUrl + 'auth-callback';
     private twitchAuthUrl = 'https://id.twitch.tv/oauth2/authorize';
     private userAccount: BehaviorSubject<TwitchLogin | undefined> = new BehaviorSubject<TwitchLogin | undefined>(undefined);
@@ -28,7 +27,7 @@ export class TwitchAuthService {
     // Redirect the user to Twitch for login
     loginWithTwitch(): void {
         const scopes = encodeURIComponent('user:read:email'); // Add required scopes ()
-        const twitchUrl = `${this.twitchAuthUrl}?client_id=${this.clientId}&redirect_uri=${this.redirectUri}&response_type=code&scope=${scopes}`;
+        const twitchUrl = `${this.twitchAuthUrl}?client_id=${TwitchClientId}&redirect_uri=${this.redirectUri}&response_type=code&scope=${scopes}`;
 
         // Redirect to Twitch OAuth login page
         window.location.href = twitchUrl;
