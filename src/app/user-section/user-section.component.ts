@@ -18,6 +18,7 @@ import { ProfileNameDialogComponent } from './dialogs/profile-name-dialog.compon
 import { MatDialog } from '@angular/material/dialog';
 import { ChatHistoryComponent } from './users/chat-window/chat-history.component';
 import { Dropdown } from 'bootstrap';
+import { VodListComponent } from './users/vod-list/vod-list.component';
 
 @Component({
   selector: 'app-user-section',
@@ -31,7 +32,8 @@ import { Dropdown } from 'bootstrap';
     RouterModule,
     DragDropModule,
     GridsterModule,
-    ChatHistoryComponent
+    ChatHistoryComponent,
+    VodListComponent
   ]
 })
 export class UserSectionComponent implements OnInit, OnDestroy {
@@ -46,6 +48,7 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   subscriptions: Subscription = new Subscription();
   
   @ViewChild('profileDropdownButton') profileDropdownButton!: ElementRef;
+  @ViewChild(VodListComponent) vodListComponent!: VodListComponent;
 
   version = version;
   components = COMPONENTS; // Unified config array
@@ -284,6 +287,12 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   resetLayout() {
     this.gridsterLayout = this.profileService.getDefaultProfileByName(this.activeProfile?.name || 'Complete').layout;
     this.saveLayoutToProfile(); // Save reset layout to profile
+  }
+
+  showVodModal() {
+    if (this.vodListComponent) {
+        this.vodListComponent.openModal();
+    }
   }
 
   isActive(componentType: ComponentType): boolean {

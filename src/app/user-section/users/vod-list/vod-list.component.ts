@@ -21,31 +21,29 @@ export class VodListComponent {
     isLoaded: boolean = false;
     isLoading: boolean = false;
 
-    @ViewChild('vodListModal', { static: true }) vodListModal!: ElementRef; // Get the modal element reference
+    @ViewChild('vodListModal', { static: true }) vodListModal!: ElementRef;
 
     private modalInstance: Modal | null = null;
 
     constructor(private twitchVodService: TwitchVodService) { }
 
-    // Method to open the modal and load VODs externally
     openModal(): void {
         if (!this.isLoaded) {
             this.loadVods();
         }
-        // Initialize Bootstrap modal
+        
         this.modalInstance = new Modal(this.vodListModal.nativeElement, {
             backdrop: 'static',
             keyboard: false
         });
-        this.modalInstance.show(); // Show the modal programmatically
+        this.modalInstance.show();
     }
 
-    // Method to load VODs
     loadVods(): void {
         this.twitchVodService.getVodsFromChannel(this.username).subscribe({
             next: (response) => {
                 this.vods = response.videos;
-                this.isLoaded = true;  // Prevent multiple reloads
+                this.isLoaded = true;
             },
             error: (err) => {
                 console.error('Error fetching VODs:', err);
@@ -53,28 +51,26 @@ export class VodListComponent {
         });
     }
 
-    // Method to handle VOD selection and fetch chat messages
     selectVod(vod: Video): void {
         this.selectedVod = vod;
         this.isLoading = true;
         this.twitchVodService.getChatMessagesFromVod(this.username, vod.id, vod.createdAt, vod.viewCount).subscribe({
             next: (result) => {
-                this.selectedVod = null; // Reset selected VOD
+                this.selectedVod = null;
                 this.isLoading = false;
-                this.closeModal(); // Close modal after chat messages are loaded
+                this.closeModal();
                 this.twitchVodService.vodsFetchedSubject.next(true);
             },
             error: (err) => {
                 console.error('Error fetching chat messages:', err);
-                this.closeModal(); // Close modal even if there's an error
+                this.closeModal();
             }
         });
     }
 
-    // Method to close the modal
     closeModal(): void {
         if (this.modalInstance) {
-            this.modalInstance.hide(); // Close the modal programmatically
+            this.modalInstance.hide();
         }
     }
 }

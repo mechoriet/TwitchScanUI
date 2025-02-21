@@ -13,8 +13,8 @@ import { SentenceFrequencyComponent } from '../users/sentence-frequency.componen
 import { ChatWindowComponent } from '../users/chat-window/chat-window.component';
 import { HeatmapSelectionComponent } from '../../user-dashboard/heatmap-selection/heatmap-selection.component';
 import { EmoteUsageComponent } from '../message/emote-usage.component';
-import { BotLikelinessCurrentComponent } from '../users/bot-detection/bot-likeliness-current.component';
 import { TopBitsComponent } from '../message/top-bits.component';
+import { VodListComponent } from '../users/vod-list/vod-list.component';
 
 export enum ComponentType {
     ChannelInfo = 'ChannelInfo',
@@ -32,7 +32,7 @@ export enum ComponentType {
     EmoteUsage = 'EmoteUsage',
     TopBitsCheered = 'TopBitsCheered',
     HeatmapSelection = 'HeatmapSelection',
-    SuspiciousActivity = 'SuspiciousActivity',
+    VodList = 'VodList',
 }
 
 export const COMPONENTS = [
@@ -125,12 +125,6 @@ export const COMPONENTS = [
         type: ComponentType.HeatmapSelection,
         icon: 'fa-solid fa-calendar-day',
         component: HeatmapSelectionComponent
-    },
-    {
-        name: 'Suspicious Activity',
-        type: ComponentType.SuspiciousActivity,
-        icon: 'fa-solid fa-exclamation-triangle',
-        component: BotLikelinessCurrentComponent
     }
 ];
 

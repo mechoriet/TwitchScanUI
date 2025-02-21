@@ -124,7 +124,6 @@ export class ProfileService {
         return [
             { cols: 2, rows: 1, y: 0, x: 0, type: ComponentType.SentimentOverTime },
             { cols: 2, rows: 1, y: 1, x: 0, type: ComponentType.SentimentAnalysis },
-            { cols: 2, rows: 1, y: 2, x: 0, type: ComponentType.SuspiciousActivity },
         ];
     }    
 

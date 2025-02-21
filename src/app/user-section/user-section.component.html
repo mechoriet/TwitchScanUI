@@ -68,6 +68,14 @@
           </span>
         </button>
       </li>
+      <li class="nav-item">
+        <button class="btn text-truncate nav-btn" (click)="showVodModal()">
+          <i class="fas fa-video" title="VODs"></i>
+          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+            VODs
+          </span>
+        </button>
+      </li>
     </ul>
 
     <!-- Spacer to push the Home button to the bottom -->
@@ -144,3 +152,6 @@
     </div>
   </div>
 </div>
+
+<!-- VOD Modal -->
+ <app-vod-list [username]="username"></app-vod-list>
