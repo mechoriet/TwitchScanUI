@@ -99,9 +99,9 @@ export class UserData {
     this.SentimentAnalysis = new SentimentAnalysis();
     this.SubscriptionStatistic = new SubscriptionStatistic();
     this.BotLikeliness = new BotLikeliness();
-    this.TotalBans = { totalBans: 0, banReasons: [] };
+    this.TotalBans = { TotalBans: 0, BanReasons: [] };
     this.TotalMessages = 0;
-    this.TotalTimeouts = { totalTimeouts: 0, totalTimeoutDuration: 0, averageTimeoutDuration: 0, timeoutReasons: [] };
+    this.TotalTimeouts = { TotalTimeouts: 0, totalTimeoutDuration: 0, AverageTimeoutDuration: 0, timeoutReasons: [] };
     this.TotalUsers = 0;
     this.UniqueWords = 0;
     this.UniqueChatters = 0;
@@ -130,13 +130,13 @@ export interface PeakActivityPeriod {
 }
 
 export interface TotalBans {
-  totalBans: number;
-  banReasons: any[];
+  TotalBans: number;
+  BanReasons: any[];
 }
 
 export interface TotalTimeouts {
-  totalTimeouts: number;
+  TotalTimeouts: number;
   totalTimeoutDuration: number;
-  averageTimeoutDuration: number;
+  AverageTimeoutDuration: number;
   timeoutReasons: any[];
 }
