@@ -87,19 +87,19 @@ import { Subscription } from 'rxjs';
                 <th class="text-start p-0 px-1 w-100 border-secondary text-warning">
                     <i class="fa-solid me-1 fa-ban"></i> Total Timeouts
                 </th>
-                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalTimeouts.TotalTimeouts }}</td>
+                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalTimeouts.totalTimeouts }}</td>
             </tr>
             <tr>
                 <th class="text-start p-0 px-1 w-100 border-secondary text-warning">
                     <i class="fa-solid me-1 fa-hourglass"></i> Average Timeout Duration
                 </th>
-                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalTimeouts.AverageTimeoutDuration / 60 | number: '1.0-0' }} min</td>
+                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalTimeouts.averageTimeoutDuration / 60 | number: '1.0-0' }} min</td>
             </tr>
             <tr>
                 <th class="text-start p-0 px-1 w-100 border-secondary text-warning">
                     <i class="fa-solid me-1 fa-gavel"></i> Total Bans
                 </th>
-                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalBans.TotalBans }}</td>
+                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalBans.totalBans }}</td>
             </tr>
         </tbody>
     </table>

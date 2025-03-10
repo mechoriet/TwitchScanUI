@@ -54,6 +54,16 @@ export interface ChannelMetrics {
   trend: Trend;
 }
 
+export interface CommercialStatistic {
+  totalCommercialTime: number;
+  commercialsOverTime: { [key: string]: ChannelCommercial[] };
+}
+
+export interface ChannelCommercial {
+  channelName: string;
+  length: number;
+}
+
 export interface ViewerStatistics {
   currentViewers: number;
   averageViewers: number;
@@ -79,6 +89,7 @@ export class UserData {
   WordFrequency: { [key: string]: number };
   BitsCheeredStatistic: Array<{ key: string; value: number }>;
   ChannelMetrics: ChannelMetrics;
+  CommercialStatistic: CommercialStatistic;
   IsOnline: boolean;
   RaidStatistic: RaidStatisticResult | undefined;
 
@@ -99,9 +110,9 @@ export class UserData {
     this.SentimentAnalysis = new SentimentAnalysis();
     this.SubscriptionStatistic = new SubscriptionStatistic();
     this.BotLikeliness = new BotLikeliness();
-    this.TotalBans = { TotalBans: 0, BanReasons: [] };
+    this.TotalBans = { totalBans: 0, banReasons: [] };
     this.TotalMessages = 0;
-    this.TotalTimeouts = { TotalTimeouts: 0, totalTimeoutDuration: 0, AverageTimeoutDuration: 0, timeoutReasons: [] };
+    this.TotalTimeouts = { totalTimeouts: 0, totalTimeoutDuration: 0, averageTimeoutDuration: 0, timeoutReasons: [] };
     this.TotalUsers = 0;
     this.UniqueWords = 0;
     this.UniqueChatters = 0;
@@ -115,6 +126,7 @@ export class UserData {
       totalWatchTime: 0,
       trend: Trend.Stable
     };
+    this.CommercialStatistic = { totalCommercialTime: 0, commercialsOverTime: {} };
     this.IsOnline = false;
     this.RaidStatistic = undefined;
   }
@@ -130,13 +142,13 @@ export interface PeakActivityPeriod {
 }
 
 export interface TotalBans {
-  TotalBans: number;
-  BanReasons: any[];
+  totalBans: number;
+  banReasons: any[];
 }
 
 export interface TotalTimeouts {
-  TotalTimeouts: number;
+  totalTimeouts: number;
   totalTimeoutDuration: number;
-  AverageTimeoutDuration: number;
+  averageTimeoutDuration: number;
   timeoutReasons: any[];
 }

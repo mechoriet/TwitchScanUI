@@ -77,6 +77,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
             next: (connected) => {
                 if (connected) {
                     this.initiate();
+                    this.dataService.joinChannel("public");
                 }
             },
             error: (err) => {
@@ -118,6 +119,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(sub => sub.unsubscribe());
+        this.dataService.leaveChannel("public");
     }
 
     sortInitiatedChannels(): void {
