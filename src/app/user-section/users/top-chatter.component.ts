@@ -52,6 +52,7 @@ export class TopChatterComponent implements OnInit, OnDestroy {
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1,
         yAxisID: 'y-sentiment',
+        hidden: true,
       },
       {
         label: 'Negative Sentiment',
@@ -60,6 +61,7 @@ export class TopChatterComponent implements OnInit, OnDestroy {
         borderColor: 'rgba(255, 99, 132, 1)',
         borderWidth: 1,
         yAxisID: 'y-sentiment',
+        hidden: true,
       },
       {
         label: 'Compound Sentiment',
@@ -68,6 +70,7 @@ export class TopChatterComponent implements OnInit, OnDestroy {
         borderColor: 'rgba(153, 102, 255, 1)',
         borderWidth: 1,
         yAxisID: 'y-sentiment',
+        hidden: true,
       },
     ],
   };
