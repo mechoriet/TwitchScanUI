@@ -76,8 +76,8 @@ export class ViewerMetricComponent implements OnDestroy {
   // Default colors
   regularColor = 'rgba(75, 192, 192, 1)';
   regularBackgroundColor = 'rgba(75, 192, 192, 0.2)';
-  commercialColor = 'rgba(255, 165, 0, 1)';
-  commercialBackgroundColor = 'rgba(255, 165, 0, 0.2)';
+  commercialColor = 'rgb(75, 140, 165)';
+  commercialBackgroundColor = 'rgba(75, 140, 165, 0.2)';
 
   // Array to track commercial time periods
   commercialPeriods: { start: Date, end: Date }[] = [];

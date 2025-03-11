@@ -104,7 +104,7 @@
                     <!-- Channel Thumbnail -->
                     <div class="position-relative">
                         <img class="card-img-top" style="height: 160px; object-fit: cover;"
-                            [src]="'https://static-cdn.jtvnw.net/previews-ttv/live_user_' + channel.channelName.toLowerCase() + '-320x180.jpg'"
+                            [src]="'https://static-cdn.jtvnw.net/previews-ttv/live_user_' + channel.channelName.toLowerCase() + '-320x180.jpg' + '?t=' + getTimeSince(channel.streamingSince)"
                             alt="Channel Thumbnail" />
                         <!-- Viewer Count Badge -->
                         <span class="badge bg-danger position-absolute top-0 end-0 m-2"><i class="fa-solid fa-eye"></i>
