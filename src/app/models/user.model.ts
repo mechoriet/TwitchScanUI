@@ -87,7 +87,7 @@ export class UserData {
   UniqueWords: number;
   UniqueChatters: number;
   WordFrequency: { [key: string]: number };
-  BitsCheeredStatistic: Array<{ key: string; value: number }>;
+  BitsCheeredStatistic: { [key: string]: number };
   ChannelMetrics: ChannelMetrics;
   CommercialStatistic: CommercialStatistic;
   IsOnline: boolean;
@@ -117,7 +117,7 @@ export class UserData {
     this.UniqueWords = 0;
     this.UniqueChatters = 0;
     this.WordFrequency = {};
-    this.BitsCheeredStatistic = [];
+    this.BitsCheeredStatistic = {};
     this.ChannelMetrics = {
       viewerStatistics: { currentViewers: 0, averageViewers: 0, peakViewers: 0 },
       currentGame: "",

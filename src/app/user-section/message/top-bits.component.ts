@@ -114,18 +114,19 @@ export class TopBitsComponent implements OnDestroy {
   };
 
   updateChartData(): void {
-    const topBitsCheered = Array.isArray(this.userData.BitsCheeredStatistic)
-      ? [...this.userData.BitsCheeredStatistic]
-      : [];
-    topBitsCheered.sort((a, b) => b.value - a.value);
+    const bits = this.userData.BitsCheeredStatistic;
+    const bitsObj = Array.isArray(bits)
+      ? Object.fromEntries(bits.map(({ key, value }) => [key, value]))
+      : bits;
+    const topBitsCheered = Object.entries(bitsObj as { [key: string]: number }).sort((a, b) => b[1] - a[1]);
 
     const keys: string[] = [];
     const values: number[] = [];
-    topBitsCheered.forEach(({ key, value }) => {
+    topBitsCheered.forEach(([key, value]) => {
       keys.push(key);
       values.push(value);
     });
-    
+
     this.bitChartData.labels = keys.slice(0, 10);
     this.bitChartData.datasets[0].data = values.slice(0, 10);
     this.chart?.chart?.update();
