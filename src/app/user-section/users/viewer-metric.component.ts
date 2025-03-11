@@ -91,7 +91,7 @@ export class ViewerMetricComponent implements OnDestroy {
 
     this.subscriptions.add(this.settingsService.settings$.subscribe((s) => {
       if (this.chartOptions) {
-        // this.chartOptions.animation = s.showChartAnimations; // Disable animation for now to remove the bounching
+        this.chartOptions.animation = s.showChartAnimations;
 
         if (this.chart && this.chart.chart) {
           this.chart.chart.config.options = this.chartOptions;
