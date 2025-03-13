@@ -12,7 +12,14 @@ export class ProfileService {
     // Retrieve user profiles, default to predefined ones if no profiles exist
     getProfiles(): UserProfile[] {
         const profiles = localStorage.getItem(this.STORAGE_KEY);
-        return profiles ? JSON.parse(profiles) : this.getDefaultProfiles();
+        const result: UserProfile[] = profiles ? JSON.parse(profiles) : this.getDefaultProfiles();
+        
+        // Check that each item exists in the "ComponentType" enum
+        for (const profile of result) {
+            profile.layout = profile.layout.filter(item => Object.values(ComponentType).includes(item.type));
+        }
+
+        return result;
     }
 
     // Save a profile
@@ -141,7 +148,6 @@ export class ProfileService {
             { cols: 1, rows: 2, y: 2, x: 0, type: ComponentType.TwitchChat },
             { cols: 1, rows: 1, y: 0, x: 0, type: ComponentType.Thumbnails },
             { cols: 1, rows: 1, y: 1, x: 0, type: ComponentType.ChannelInfo },
-            { cols: 2, rows: 1, y: 0, x: 1, type: ComponentType.HeatmapSelection }
         ];
     }    
 

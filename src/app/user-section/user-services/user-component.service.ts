@@ -11,10 +11,8 @@ import { SubscriptionSummaryComponent } from '../users/subscription-summary.comp
 import { TopChatterComponent } from '../users/top-chatter.component';
 import { SentenceFrequencyComponent } from '../users/sentence-frequency.component';
 import { ChatWindowComponent } from '../users/chat-window/chat-window.component';
-import { HeatmapSelectionComponent } from '../../user-dashboard/heatmap-selection/heatmap-selection.component';
 import { EmoteUsageComponent } from '../message/emote-usage.component';
 import { TopBitsComponent } from '../message/top-bits.component';
-import { VodListComponent } from '../users/vod-list/vod-list.component';
 
 export enum ComponentType {
     ChannelInfo = 'ChannelInfo',
@@ -31,7 +29,6 @@ export enum ComponentType {
     SentenceFrequency = 'SentenceFrequency',
     EmoteUsage = 'EmoteUsage',
     TopBitsCheered = 'TopBitsCheered',
-    HeatmapSelection = 'HeatmapSelection',
     VodList = 'VodList',
 }
 
@@ -119,12 +116,6 @@ export const COMPONENTS = [
         type: ComponentType.TopBitsCheered,
         icon: 'fa-solid fa-gem',
         component: TopBitsComponent
-    },
-    {
-        name: 'Historical Heatmap',
-        type: ComponentType.HeatmapSelection,
-        icon: 'fa-solid fa-calendar-day',
-        component: HeatmapSelectionComponent
     }
 ];
 

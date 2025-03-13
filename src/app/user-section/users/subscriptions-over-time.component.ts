@@ -14,7 +14,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
   template: `
     <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="hasData(); else noSubs">
       <h5>
-        Subscriptions Over Time (UTC)
+        Contributions Over Time (UTC)
         <i
           class="fa-solid"
           [ngClass]="{
@@ -37,7 +37,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
 
     <ng-template #noSubs>
       <div class="card border-secondary bg-dark text-light text-center h-100 m-0 justify-content-center">
-        <h5>Not enough Subscription Data Available</h5>
+        <h5>No Contributions Available</h5>
       </div>
     </ng-template>
   `,

@@ -1,223 +1,142 @@
-.heatmap-container {
+.calendar-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.legend {
   display: flex;
-  flex-direction: column;
-  overflow-x: auto;
-  overflow-y: auto;
-  width: 100%;
-  height: 100%;
-  white-space: nowrap;
   align-items: center;
+  font-size: 0.8rem;
 }
-
-.month-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.month-name {
-  min-width: 60px;
-  height: 15px;
-  margin: 1px;
-  font-size: 0.85rem;
-  text-align: center;
-}
-
-.corner-cell {
-  min-width: 40px;
-}
-
-.day-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: 14px;
-}
-
-.day-label {
-  min-width: 40px;
-  font-weight: bold;
-  text-align: right;
-  padding-right: 5px;
-  font-size: .6rem;
-}
-
-.day {
-  min-width: 12px;
-  min-height: 12px;
-  margin: 1px;
+.legend-gradient {
+  width: 100px;
+  height: 10px;
+  background: linear-gradient(to right, rgb(32, 34, 37), rgb(32, 255, 37));
   border-radius: 2px;
-  cursor: pointer;
-  transition: opacity 0.2s ease-in-out;
 }
-
-.day:hover {
-  opacity: 0.7;
+.legend-min, .legend-max {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
 }
-
-.year-selection {
+.calendar-container {
+  padding: 1rem;
+  overflow: auto;
+  max-height: 80vh;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: 30px repeat(7, minmax(25px, 1fr));
+  gap: 1px;
+  width: 100%;
+  position: relative;
+  grid-auto-flow: dense; /* This helps fill in gaps */
+}
+.day-header {
+  text-align: center;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  padding: 0.25rem 0;
+  position: sticky;
+  top: 0;
+  background-color: rgb(32, 34, 37);
+  z-index: 3;
+}
+.month-label {
+  grid-column: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  position: sticky;
+  left: 0;
+  background-color: rgb(32, 34, 37);
+  z-index: 2;
 }
-
-.year-label {
-  font-weight: bold;
-  margin: 0 10px;
+.day-cell {
+  aspect-ratio: 4;
+  min-height: 14px;
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    transform: scale(1.15);
+    z-index: 10;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  }
+  
+  &.month-start {
+    border-top: 1px solid rgba(220, 220, 220, 0.5);
+    border-radius: 0 2px 2px 2px;
+  }
+  
+  &.month-end {
+    border-right: 1px solid rgba(220, 220, 220, 0.5);
+    border-bottom: 1px solid rgba(220, 220, 220, 0.5);
+    border-radius: 0 0 2px 2px;
+  }
+  
+  &.has-data {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+  }
 }
-
-
+.day-tooltip {
+  position: absolute;
+  display: none;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(120, 220, 255, 0.5);
+  border-radius: 4px;
+  padding: 0.5rem;
+  z-index: 100;
+  width: 150px;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  
+  .date {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+  
+  .viewers {
+    font-size: 0.8rem;
+  }
+}
+.day-cell:hover .day-tooltip {
+  display: block;
+}
 
 /* Media queries for responsiveness */
-
-/* For very large screens */
-@media (max-width: 1920px) {
-  .month-name, .day-label {
-    font-size: 0.75rem;
-    min-width: 50px;
-  }
-
-  .day {
-    min-width: 10px;
-    min-height: 10px;
-  }
-
-  .day-row {
-    height: 12px;
-  }
-
-  .corner-cell {
-    min-width: 40px;
-  }
-
-  .day-label {
-    font-size: .55rem;
-  }  
-}
-
-/* For large screens */
-@media (max-width: 1440px) {
-  .month-name, .day-label {
-    font-size: 0.7rem;
-    min-width: 45px;
-  }
-
-  .day {
-    min-width: 9px;
-    min-height: 9px;
-  }
-
-  .day-row {
-    height: 11px;
-  }
-
-  .corner-cell {
-    min-width: 35px;
-  }
-
-  .day-label {
-    font-size: .5rem;
-  }
-}
-
-
-/* For tablets in landscape mode */
-@media (max-width: 1024px) {
-  .month-name, .day-label {
-    font-size: 0.65rem;
-    min-width: 40px;
-  }
-
-  .day {
-    min-width: 8px;
-    min-height: 8px;
-  }
-
-  .day-row {
-    height: 10px;
-  }
-
-  .corner-cell {
-    min-width: 30px;
-  }
-
-  .day-label {
-    font-size: .45rem;
-  }
-}
-
-/* For tablets in portrait mode and smaller devices */
 @media (max-width: 768px) {
-  .month-name, .day-label {
-    font-size: 0.6rem;
-    min-width: 35px;
+  .calendar-grid {
+    grid-template-columns: 25px repeat(7, 1fr);
   }
-
-  .day {
-    min-width: 7px;
-    min-height: 7px;
+  .month-label {
+    font-size: 0.7rem;
   }
-
-  .day-row {
-    height: 9px;
-  }
-
-  .corner-cell {
-    min-width: 25px;
-  }
-
-  .day-label {
-    font-size: .4rem;
+  .day-header {
+    font-size: 0.7rem;
   }
 }
-
-/* For mobile devices */
 @media (max-width: 480px) {
-  .month-name, .day-label {
-    font-size: 0.55rem;
-    min-width: 30px;
+  .calendar-header {
+    flex-direction: column;
+    align-items: center;
+    .legend {
+      margin: 0.5rem 0;
+    }
   }
-
-  .day {
-    min-width: 6px;
-    min-height: 6px;
-  }
-
-  .day-row {
-    height: 8px;
-  }
-
-  .corner-cell {
-    min-width: 20px;
-  }
-
-  .day-label {
-    font-size: .35rem;
-  }
-}
-
-/* For very small mobile devices */
-@media (max-width: 320px) {
-  .month-name, .day-label {
-    font-size: 0.5rem;
-    min-width: 25px;
-  }
-
-  .day {
-    min-width: 5px;
-    min-height: 5px;
-  }
-
-  .day-row {
-    height: 7px;
-  }
-
-  .corner-cell {
-    min-width: 15px;
-  }
-
-  .day-label {
-    font-size: .3rem;
+  .calendar-grid {
+    grid-template-columns: 20px repeat(7, 1fr);
   }
 }

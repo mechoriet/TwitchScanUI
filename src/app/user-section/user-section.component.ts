@@ -19,6 +19,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ChatHistoryComponent } from './users/chat-window/chat-history.component';
 import { Dropdown } from 'bootstrap';
 import { VodListComponent } from './users/vod-list/vod-list.component';
+import { HeatmapDialog } from '../user-dashboard/heatmap-selection/heatmap.dialog';
 
 @Component({
   selector: 'app-user-section',
@@ -34,7 +35,7 @@ import { VodListComponent } from './users/vod-list/vod-list.component';
     GridsterModule,
     ChatHistoryComponent,
     VodListComponent
-  ]
+]
 })
 export class UserSectionComponent implements OnInit, OnDestroy {
   username: string = '';
@@ -293,6 +294,15 @@ export class UserSectionComponent implements OnInit, OnDestroy {
     if (this.vodListComponent) {
         this.vodListComponent.openModal();
     }
+  }
+
+  showHeatmapModal() {    
+    this.dialog.open(HeatmapDialog, {
+      width: '90%',
+      maxWidth: '1200px',
+      panelClass: 'heatmap-dialog-container',
+      disableClose: true
+    });
   }
 
   isActive(componentType: ComponentType): boolean {

@@ -11,7 +11,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-emote-usage',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2">
+    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2" *ngIf="hasData(); else noEmotes">
     <h5>Emote Usage</h5>   
       <canvas
         *ngIf="emoteChartData.datasets[0].data.length > 0"
@@ -22,6 +22,12 @@ import { SettingsService } from '../../services/app-service/settings.service';
       >
       </canvas>
     </div>
+
+    <ng-template #noEmotes>
+      <div class="card border-secondary bg-dark text-light text-center h-100 m-0 justify-content-center">
+        <h5>No Emotes Used</h5>
+      </div>
+    </ng-template>
   `,
   imports: [CommonModule, BaseChartDirective],
 })
@@ -110,6 +116,12 @@ export class EmoteUsageComponent implements OnDestroy {
       easing: 'easeInOutQuart',
     },
   };
+
+  hasData(): boolean {
+    return (
+      (this.emoteChartData.datasets[0].data && (this.emoteChartData.datasets[0].data as any[]).length > 1)
+    );
+  }
 
   updateChartData(): void {
     // Populate chart data with the top 10 emote usages

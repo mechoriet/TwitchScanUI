@@ -117,9 +117,10 @@ canvas {
 }
 
 .mat-mdc-dialog-surface {
-  background-color: transparent !important;
+  background-color: rgb(24, 26, 30) !important;
   box-shadow: none !important;
-  border-radius: none !important;
+  border-radius: 5px 5px !important;
+  padding: 10px;
 }
 
 

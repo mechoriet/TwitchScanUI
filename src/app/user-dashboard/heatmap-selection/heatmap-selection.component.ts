@@ -26,6 +26,9 @@ export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
   months: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   selectedYear: number = new Date().getUTCFullYear();
   selectedDayEntries: HistoryTimeline[] = [];
+  calendarData: CalendarMonth[] = [];
+  minViewers: number = 0;
+  maxViewers: number = 0;
 
   // Dragging variables
   isDragging: boolean = false;
@@ -53,6 +56,7 @@ export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
     document.addEventListener('click', this.onDocumentClick.bind(this));
 
     const heatmapContainer = this.elRef.nativeElement.querySelector('.heatmap-container');
+    if (!heatmapContainer) return;
 
     // Listen for mouse down event to start dragging
     heatmapContainer.addEventListener('mousedown', (e: MouseEvent) => {
@@ -87,6 +91,7 @@ export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
     document.removeEventListener('click', this.onDocumentClick.bind(this));
     this.subscriptions.unsubscribe();
     const heatmapContainer = this.elRef.nativeElement.querySelector('.heatmap-container');
+    if (!heatmapContainer) return;
     heatmapContainer.removeEventListener('mousedown', () => { });
     window.removeEventListener('mouseup', () => { });
     heatmapContainer.removeEventListener('mousemove', () => { });
@@ -110,64 +115,108 @@ export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
   }
 
   generateHeatmap(): void {
-    const weeks: Array<Array<HistoryTimeline[] | string>> = [];
     const year = this.selectedYear;
-    const janFirst = new Date(Date.UTC(year, 0, 1));
-    const decLast = new Date(Date.UTC(year, 11, 31));
-
-    let currentDate = new Date(janFirst);
-    let currentWeek: Array<HistoryTimeline[] | string> = new Array(janFirst.getUTCDay()).fill('');
-
-    // Fill in all days of the selected year
-    while (currentDate <= decLast) {
-      const dayOfWeek = currentDate.getUTCDay();
-      currentWeek[dayOfWeek] = currentDate.toDateString();
-
-      if (dayOfWeek === 6) {
-        weeks.push(currentWeek);
-        currentWeek = [];
-      }
-
-      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
-    }
-
-    // Push the last week if it wasn't completed
-    if (currentWeek.length > 0) {
-      weeks.push(currentWeek);
-    }
-
-    // Fill in the first week to complete the calendar (days before Jan 1)
-    if (weeks.length > 0 && weeks[0].length < 7) {
-      weeks[0] = [...new Array(7 - weeks[0].length).fill(''), ...weeks[0]];
-    }
-
-    // Populate heatmap with actual timeline data
-    this.timelines.forEach((timeline) => {
+  
+    // Process timeline data into a map for quick lookup
+    const timelineMap = new Map<string, HistoryTimeline[]>();
+    this.timelines.forEach(timeline => {
       const date = new Date(timeline.time);
       if (date.getUTCFullYear() === year) {
-        const weekOfYear = this.getWeekOfYear(date);
-        const dayOfWeek = date.getUTCDay();
-
-        if (weekOfYear < weeks.length) {
-          if (!Array.isArray(weeks[weekOfYear][dayOfWeek])) {
-            weeks[weekOfYear][dayOfWeek] = [];
-          }
-          (weeks[weekOfYear][dayOfWeek] as HistoryTimeline[]).push(timeline);
+        const dateKey = date.toISOString().split('T')[0];
+        if (!timelineMap.has(dateKey)) {
+          timelineMap.set(dateKey, []);
         }
+        timelineMap.get(dateKey)!.push(timeline);
       }
     });
 
-    this.heatmap = weeks;
-
-    // Scroll to the current week or a specific week based on logic
-    setTimeout(() => {
-      const currentDate = new Date(); // Or some other logic to determine the target week
-      const currentWeekIndex = this.getWeekOfYear(currentDate); // Determine the correct week index
-      const weekElements = this.elRef.nativeElement.querySelectorAll('.week-number');
-      if (weekElements[currentWeekIndex]) {
-        weekElements[currentWeekIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    this.minViewers = Math.min(...this.timelines.map(t => t.peakViewers));
+    this.maxViewers = Math.max(...this.timelines.map(t => t.peakViewers));
+  
+    // Create a continuous grid of days for the entire year
+    const startDate = new Date(Date.UTC(year, 0, 1));
+    const endDate = new Date(Date.UTC(year, 11, 31));
+    
+    // Calculate start offset (what day of the week is Jan 1)
+    const startDayOfWeek = startDate.getUTCDay();
+    
+    // Create array of all days in the year
+    const allDays: CalendarDay[] = [];
+    
+    // Add empty cells for days before Jan 1
+    for (let i = 0; i < startDayOfWeek; i++) {
+      allDays.push({
+        date: null,
+        isFirstDayOfMonth: false,
+        isLastDayOfMonth: false,
+        entries: null
+      });
+    }
+    
+    // Add all days of the year
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const nextDay = new Date(currentDate);
+      nextDay.setUTCDate(currentDate.getUTCDate() + 1);
+      
+      const month = currentDate.getUTCMonth();
+      const date = currentDate.getUTCDate();
+      
+      // Check if it's first day of month
+      const isFirstDayOfMonth = date === 1;
+      
+      // Check if it's last day of month
+      const isLastDayOfMonth = nextDay.getUTCMonth() !== month;
+      
+      const dateKey = currentDate.toISOString().split('T')[0];
+      
+      allDays.push({
+        date: new Date(currentDate),
+        isFirstDayOfMonth: isFirstDayOfMonth,
+        isLastDayOfMonth: isLastDayOfMonth,
+        entries: timelineMap.has(dateKey) ? timelineMap.get(dateKey)! : null
+      });
+      
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+    }
+    
+    // Organize days into weeks
+    const weeks: CalendarDay[][] = [];
+    for (let i = 0; i < allDays.length; i += 7) {
+      weeks.push(allDays.slice(i, i + 7));
+    }
+    
+    // Create a continuous flow of months
+    this.calendarData = [];
+    let currentWeekIndex = 0;
+    
+    for (let month = 0; month < 12; month++) {
+      // Find the week containing the first day of this month
+      let firstWeekOfMonth = -1;
+      let lastWeekOfMonth = -1;
+      
+      for (let w = 0; w < weeks.length; w++) {
+        for (let d = 0; d < weeks[w].length; d++) {
+          const day = weeks[w][d];
+          if (day.date && day.date.getUTCMonth() === month) {
+            if (firstWeekOfMonth === -1) {
+              firstWeekOfMonth = w;
+            }
+            lastWeekOfMonth = w;
+          }
+        }
       }
-    }, 0);
+      
+      if (firstWeekOfMonth !== -1) {
+        const calendarMonth: CalendarMonth = {
+          startRow: firstWeekOfMonth + 2, // +2 for header rows
+          endRow: lastWeekOfMonth + 3, // +3 for header rows and to make it exclusive
+          weeks: weeks.slice(firstWeekOfMonth, lastWeekOfMonth + 1)
+        };
+        
+        this.calendarData.push(calendarMonth);
+      }
+    }
   }
 
   getWeekOfYear(date: Date): number {
@@ -176,21 +225,58 @@ export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
     return Math.floor(dayOfYear / 7);
   }
 
-  getColor(day: HistoryTimeline[] | string): string {
-    if (typeof day === 'string' || day === undefined || !day.length) {
+  getColor(entries: HistoryTimeline[] | null): string {
+    if (!entries || entries.length === 0) {
       return `rgb(32, 34, 37)`;
     }
 
-    const averageViewers = day[0].averageViewers;
+    // Calculate average viewer count across all entries
+    const averageViewers = entries.reduce((sum, entry) => sum + entry.averageViewers, 0) / entries.length;
+
     if (averageViewers === 0) {
       return `rgb(32, 34, 37)`;
     }
 
     const maxViewers = Math.max(...this.timelines.map(t => t.peakViewers));
-    const intensity = (averageViewers - 0) / (maxViewers - 0);
+    const intensity = Math.min(1, averageViewers / maxViewers);
     const greenIntensity = Math.floor(intensity * 255);
 
-    return `rgba(32, ${greenIntensity}, 37, .8)`;
+    return `rgba(32, ${greenIntensity}, 37, 0.8)`;
+  }
+
+  formatDateShort(date: Date | null): string {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  
+  formatDate(day: HistoryTimeline[] | string): string {
+    if (typeof day === 'string') {
+      return new Date(day).toDateString();
+    }
+  
+    if (Array.isArray(day) && day.length > 0) {
+      const firstEntry = day[0];
+      const firstDate = new Date(firstEntry.time).toDateString();
+      const viewerInfo = day.length === 1
+        ? `${firstEntry.averageViewers} viewers`
+        : `${day.length} entries, top viewers: ${firstEntry.averageViewers}`;
+  
+      return `${firstDate}\n${viewerInfo}`;
+    }
+  
+    return 'No data';
+  }
+
+  formatViewerInfo(entries: HistoryTimeline[] | null): string {
+    if (!entries || entries.length === 0) return 'No data';
+
+    if (entries.length === 1) {
+      return `Avg: ${entries[0].averageViewers} · Peak: ${entries[0].peakViewers}`;
+    } else {
+      const totalAvg = entries.reduce((sum, entry) => sum + entry.averageViewers, 0) / entries.length;
+      const maxPeak = Math.max(...entries.map(entry => entry.peakViewers));
+      return `${entries.length} streams · Avg: ${Math.round(totalAvg)} · Peak: ${maxPeak}`;
+    }
   }
 
   onDayClick(day: HistoryTimeline[] | string): void {
@@ -202,9 +288,12 @@ export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
         // Open the Angular Material dialog with the multiple entries
         const dialogRef = this.dialog.open(DayEntryDialogComponent, {
           width: '400px',
-          data: { selectedDayEntries: day }
+          data: { selectedDayEntries: day },
+          panelClass: 'day-entry-dialog',
+          hasBackdrop: false,
+          autoFocus: true
         });
-
+  
         dialogRef.afterClosed().subscribe((result) => {
           if (result) {
             this.selectEntry(result);
@@ -239,23 +328,17 @@ export class HeatmapSelectionComponent implements OnDestroy, AfterViewInit {
   closeModal(): void {
     this.selectedDayEntries = [];
   }
+}
 
-  formatDate(day: HistoryTimeline[] | string): string {
-    if (typeof day === 'string' || day === undefined) {
-      return day ? new Date(day).toDateString() : 'Invalid Date';
-    }
+interface CalendarDay {
+  date: Date | null;
+  isFirstDayOfMonth: boolean;
+  isLastDayOfMonth: boolean;
+  entries: HistoryTimeline[] | null;
+}
 
-    if (Array.isArray(day) && day.length > 0) {
-      // Explicitly tell TypeScript that day is HistoryTimeline[]
-      const firstEntry = day[0];
-      const firstDate = new Date(firstEntry.time).toDateString();
-      const viewerInfo = day.length === 1
-        ? `${firstEntry.averageViewers} viewers`
-        : `${day.length} entries, top viewers: ${firstEntry.averageViewers}`;
-
-      return `${firstDate}\n${viewerInfo}`;
-    }
-
-    return 'No data';
-  }
+interface CalendarMonth {
+  startRow: number;
+  endRow: number;
+  weeks: CalendarDay[][];
 }

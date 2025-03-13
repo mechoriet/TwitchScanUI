@@ -11,7 +11,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-top-bits',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2">
+    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2" *ngIf="hasData(); else noBits">
     <h5>Bits Cheered</h5>   
       <canvas
         *ngIf="bitChartData.datasets[0].data.length > 0"
@@ -23,6 +23,12 @@ import { SettingsService } from '../../services/app-service/settings.service';
       >
       </canvas>
     </div>
+
+    <ng-template #noBits>
+      <div class="card border-secondary bg-dark text-light text-center h-100 m-0 justify-content-center">
+        <h5>No Bits Cheered</h5>
+      </div>
+    </ng-template>
   `,
   imports: [CommonModule, BaseChartDirective],
 })
@@ -111,7 +117,13 @@ export class TopBitsComponent implements OnDestroy {
       easing: 'easeInOutQuart',
     },
     onClick: (event, activeElements) => this.onChartClick(event, activeElements),
-  };
+  };  
+  
+  hasData(): boolean {
+    return (
+      (this.bitChartData.datasets[0].data && (this.bitChartData.datasets[0].data as any[]).length > 1)
+    );
+  }
 
   updateChartData(): void {
     const bits = this.userData.BitsCheeredStatistic;
