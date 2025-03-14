@@ -175,6 +175,13 @@ export class ChannelInfoComponent {
   }
 
   formatDate(dateString: string): string {
-    return dateString.includes('.') ? dateString.split('.')[0] : dateString;
+    if (!dateString.includes('.')) {
+      return dateString;
+    }
+    const parts = dateString.split('.');
+    if (parts.length === 3) {
+      return `${parts[0]}d ${parts[1]}`;
+    }
+    return parts[0];
   }
 }
