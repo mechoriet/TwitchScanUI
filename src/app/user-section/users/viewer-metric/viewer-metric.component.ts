@@ -1,16 +1,17 @@
 import { Component, ViewChild, OnDestroy } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
-import { Trend, UserData } from '../../models/user.model';
-import { DataInterpolationService } from '../../services/chart-service/data-interpolation.service';
+import { Trend, UserData } from '../../../models/user.model';
+import { DataInterpolationService } from '../../../services/chart-service/data-interpolation.service';
 import annotationPlugin, { AnnotationOptions } from 'chartjs-plugin-annotation';
 import { Chart, ChartConfiguration } from 'chart.js';
 import { _DeepPartialArray } from 'chart.js/dist/types/utils';
 import { CommonModule } from '@angular/common';
-import { DataService } from '../../services/app-service/data.service';
+import { DataService } from '../../../services/app-service/data.service';
 import { Subscription } from 'rxjs';
-import { openStream } from '../../helper/general.helper';
-import { SettingsService } from '../../services/app-service/settings.service';
-import { getFormattedDateSince } from '../../helper/date.helper';
+import { openStream } from '../../../helper/general.helper';
+import { SettingsService } from '../../../services/app-service/settings.service';
+import { getFormattedDateSince } from '../../../helper/date.helper';
+import { RaidListComponent } from "./raid-list.component";
 
 // Register the annotation plugin
 Chart.register(annotationPlugin);
@@ -20,7 +21,7 @@ Chart.register(annotationPlugin);
   standalone: true,
   template: `
     <div class="card border-secondary bg-dark text-light chart-container text-center h-100 m-0 px-2" *ngIf="chartData.datasets.length > 0 && chartData.datasets[0].data.length > 0; else noData">
-      <h5 class="m-0">
+      <h5 class="m-0" [class.hidden]="raidsExpanded">
         Viewers Over Time (UTC)
         <i class="fa-solid" 
         [ngClass]="{
@@ -33,23 +34,32 @@ Chart.register(annotationPlugin);
             }">
         </i>
       </h5>
-      <small class="text-muted">{{ userData.ChannelMetrics.totalWatchTime | number: '1.1-1' }}h total watchtime</small>
+      <small class="text-muted" [class.hidden]="raidsExpanded">{{ userData.ChannelMetrics.totalWatchTime | number: '1.1-1' }}h total watchtime</small>
       <canvas class="no-drag px-2"
         (dblclick)="resetZoom()"        
         baseChart
         [data]="chartData"
         [options]="chartOptions"
         [type]="'line'"
+        [class.hidden]="raidsExpanded"
       ></canvas>
+
+      <!-- Button to hide raid annotations -->
+      <button style="z-index: 10" class="btn btn-sm btn-outline-secondary mt-2 position-absolute top-0 end-0 me-2" (click)="hideRaidAnnotation()">
+        <i class="fa-solid fa-user-plus me-1"></i>
+        {{ hideRaidAnnotations ? 'Show' : 'Hide' }} Raids ({{ userData.RaidStatistic?.raidsOverTime?.length || 0 }})
+      </button>
       
       <!-- Badges for all the raiders -->
-      <div class="my-1 mx-1">
-        <span (click)="openChat(raid.value)" *ngFor="let raid of userData.RaidStatistic?.raidsOverTime; let last=last; let i = index; trackBy: trackByFn"
-        class="badge text-dark raid-text no-drag pointer" [class.me-2]="!last" 
-        [ngStyle]="{ 'background-color': getColorByKey(raid.value) }" title="{{ getFormattedDateSince(raid.key) }}">
-          <small><i class="fa-solid fa-user-plus me-1"></i>{{ raid.value }}</small>
-        </span>
-      </div>
+      <app-raid-list *ngIf="userData.RaidStatistic?.raidsOverTime && userData.RaidStatistic!.raidsOverTime.length > 0 && !hideRaidAnnotations"
+        class="position-absolute top-0 start-0 ms-2 overflow-auto w-100 pe-3"
+        [class.raids-shown]="raidsExpanded"
+        [raids]="userData.RaidStatistic?.raidsOverTime || []"
+        [colorMap]="raidColorMap"
+        [openChatFn]="openChat.bind(this)"
+        [toggleRaidsFn]="toggleRaids.bind(this)"
+        [getFormattedDateSince]="getFormattedDateSince"
+      ></app-raid-list>
     </div>
 
     <ng-template #noData>
@@ -58,12 +68,22 @@ Chart.register(annotationPlugin);
       </div>
     </ng-template>
   `,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [CommonModule, BaseChartDirective, RaidListComponent],
+  styles: [`
+    .hidden {
+      display: none !important;
+    }
+    .raids-shown {
+      max-height: 100%;
+    }
+  `]
 })
 export class ViewerMetricComponent implements OnDestroy {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   userData!: UserData;
   subscriptions: Subscription = new Subscription();
+  raidsExpanded = false;
+  hideRaidAnnotations = false;
 
   raidColorMap: { [key: string]: string } = {};
   defaultRaidColor = '#A2A2A2'; // Fallback color if no color is assigned
@@ -109,8 +129,21 @@ export class ViewerMetricComponent implements OnDestroy {
     return item.key;
   }
 
+  hideRaidAnnotation(): void {
+    this.hideRaidAnnotations = !this.hideRaidAnnotations;
+    if (this.hideRaidAnnotations) {
+      this.removeAnnotations();
+    } else {
+      this.updateAnnotations();
+    }
+  }
+
   openChat(user: string): void {
     this.dataService.chatHistorySubject.next(user);
+  }
+
+  toggleRaids(isExpanded: boolean): void {
+    this.raidsExpanded = isExpanded;
   }
 
   chartData: ChartConfiguration<'line'>['data'] = {
@@ -351,6 +384,11 @@ export class ViewerMetricComponent implements OnDestroy {
       this.chartOptions!.plugins!.annotation!.annotations = [];
     }
 
+    if (this.hideRaidAnnotations) {
+      this.chart.chart?.update();
+      return;
+    }
+
     raids.forEach((raid, index) => {
       const raidKey = raid.value;
       if (!this.raidColorMap[raidKey]) {
@@ -364,12 +402,15 @@ export class ViewerMetricComponent implements OnDestroy {
         value: this.interpolationService.formatTime(new Date(raid.key)),
         borderColor: this.raidColorMap[raidKey],
         borderWidth: 1,
+        borderDash: [4, 4],
         label: {
           enabled: true,
-          content: `Raid`,
+          content: `${raid.value} (${raid.key || '?'})`,
           position: 'end' as const,
-          backgroundColor: 'rgba(255,0,0,0.7)',
+          backgroundColor: this.raidColorMap[raidKey],
+          color: '#000',
           font: { size: 10 },
+          padding: 4
         },
       };
 

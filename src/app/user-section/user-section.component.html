@@ -31,9 +31,14 @@
               <i class="fas fa-plus"></i> Add New Profile
             </button>
           </li>
+          <li>
+            <button class="dropdown-item text-danger" (click)="resetLayout()">
+              <i class="fas fa-trash"></i> Reset Active Profile
+            </button>
+          </li>
         </ul>
       </li>
-      <li class="nav-item" *ngFor="let component of components">
+      <li class="nav-item" [class.text-center]="!showComponentNames" *ngFor="let component of components">
         <button class="btn text-truncate nav-btn text-muted" [class.text-primary]="isActive(component.type)"
           (click)="toggleComponent(component.type)">
           <i [ngClass]="component.icon" title="{{ component.name }}"></i>
@@ -43,7 +48,7 @@
         </button>
       </li>
       <hr class="bg-light">
-      <li class="nav-item">
+      <li class="nav-item" [class.text-center]="!showComponentNames">
         <button class="btn text-truncate nav-btn" (click)="toggleStream()">
           <i class="fas fa-tv" title="Toggle Stream"></i>
           <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
@@ -51,7 +56,7 @@
           </span>
         </button>
       </li>
-      <li class="nav-item">
+      <li class="nav-item" [class.text-center]="!showComponentNames">
         <button class="btn text-truncate nav-btn" (click)="toggleAnimations()">
           <i class="fas" [class.fa-chart-area]="settings.showChartAnimations"
             [class.fa-circle-xmark]="!settings.showChartAnimations" title="Toggle Animations"></i>
@@ -60,19 +65,19 @@
           </span>
         </button>
       </li>
-      <li class="nav-item">
-        <button class="btn text-truncate nav-btn" (click)="resetLayout()">
-          <i class="fas fa-repeat" title="Reset Components"></i>
-          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-            Reset Components
-          </span>
-        </button>
-      </li>
-      <li class="nav-item">
+      <li class="nav-item" [class.text-center]="!showComponentNames">
         <button class="btn text-truncate nav-btn" (click)="showHeatmapModal()">
           <i class="fas fa-calendar" title="Calendar"></i>
           <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
             Calendar
+          </span>
+        </button>
+      </li>
+      <li class="nav-item" [class.text-center]="!showComponentNames">
+        <button class="btn text-truncate nav-btn border-0" (click)="resetHistory()" *ngIf="inHistory">
+          <i class="fas fa-repeat" title="Reset Components"></i>
+          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
+            Reset Components
           </span>
         </button>
       </li>
@@ -81,7 +86,7 @@
     <!-- Spacer to push the Home button to the bottom -->
     <div class="mt-auto">
       <ul class="nav flex-column">
-        <li class="nav-item">
+        <li class="nav-item" [class.text-center]="!showComponentNames">
           <button class="btn text-truncate nav-btn" (click)="showComponentNames = !showComponentNames">
             <i class="fas fa-eye" title="{{showComponentNames ? 'Hide' : 'Show'}} Menu"></i>
             <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
@@ -89,7 +94,7 @@
             </span>
           </button>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" [class.text-center]="!showComponentNames">
           <button class="btn text-truncate nav-btn" (click)="goToDashboard()">
             <i class="fas fa-home" title="Home"></i>
             <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>

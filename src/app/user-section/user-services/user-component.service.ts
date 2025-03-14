@@ -3,7 +3,6 @@ import { SentimentAnalysisComponent } from '../sentiment/sentiment-analysis.comp
 import { ChannelInfoComponent } from '../users/channel-info.component';
 import { MessagesOverTimeComponent } from '../users/activity.component';
 import { SentimentOverTimeComponent } from '../sentiment/sentiment-over-time.component';
-import { ViewerMetricComponent } from '../users/viewer-metric.component';
 import { ThumbnailComponent } from '../users/thumbnail.component';
 import { SubscriptionsOverTimeComponent } from '../users/subscriptions-over-time.component';
 import { TopSubscriberComponent } from '../users/top-subscriber.component';
@@ -13,6 +12,7 @@ import { SentenceFrequencyComponent } from '../users/sentence-frequency.componen
 import { ChatWindowComponent } from '../users/chat-window/chat-window.component';
 import { EmoteUsageComponent } from '../message/emote-usage.component';
 import { TopBitsComponent } from '../message/top-bits.component';
+import { ViewerMetricComponent } from '../users/viewer-metric/viewer-metric.component';
 
 export enum ComponentType {
     ChannelInfo = 'ChannelInfo',

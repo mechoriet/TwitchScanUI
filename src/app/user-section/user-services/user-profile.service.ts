@@ -146,8 +146,9 @@ export class ProfileService {
             { cols: 1, rows: 1, y: 1, x: 2, type: ComponentType.SubscriptionSummary },
             { cols: 2, rows: 1, y: 2, x: 1, type: ComponentType.TopChatter },
             { cols: 1, rows: 2, y: 2, x: 0, type: ComponentType.TwitchChat },
-            { cols: 1, rows: 1, y: 0, x: 0, type: ComponentType.Thumbnails },
-            { cols: 1, rows: 1, y: 1, x: 0, type: ComponentType.ChannelInfo },
+            { cols: 1, rows: 2, y: 0, x: 0, type: ComponentType.ChannelInfo },
+            { cols: 1, rows: 1, y: 0, x: 1, type: ComponentType.EmoteUsage },
+            { cols: 1, rows: 1, y: 0, x: 2, type: ComponentType.TopBitsCheered },        
         ];
     }    
 

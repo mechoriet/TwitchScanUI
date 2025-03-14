@@ -47,6 +47,7 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   showComponentNames: boolean = false;
   info: string = ''; // Error/info messages
   subscriptions: Subscription = new Subscription();
+  inHistory = false;
   
   @ViewChild('profileDropdownButton') profileDropdownButton!: ElementRef;
   @ViewChild(VodListComponent) vodListComponent!: VodListComponent;
@@ -129,9 +130,11 @@ export class UserSectionComponent implements OnInit, OnDestroy {
     const historicalDataSubscription = this.dataService.historicalDataSubject.subscribe({
       next: (data) => {
         if (data) {
+          this.inHistory = true;
           this.dataService.leaveChannel(this.username);
           this.dataService.setUserData(data.statistics);
         } else {
+          this.inHistory = false;
           this.dataService.joinChannel(this.username);
           this.fetchData();
         }
@@ -286,8 +289,21 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   }
 
   resetLayout() {
-    this.gridsterLayout = this.profileService.getDefaultProfileByName(this.activeProfile?.name || 'Complete').layout;
-    this.saveLayoutToProfile(); // Save reset layout to profile
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '300px',
+      data: { message: `Are you sure you want to reset the layout to the default?` }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.gridsterLayout = this.profileService.getDefaultProfileByName(this.activeProfile?.name || 'Complete').layout;
+        this.saveLayoutToProfile();
+      }
+    });
+  }
+
+  resetHistory() {    
+    this.dataService.historicalDataSubject.next(undefined);
   }
 
   showVodModal() {

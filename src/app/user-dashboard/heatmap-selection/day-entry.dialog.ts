@@ -52,7 +52,7 @@ import { CommonModule } from '@angular/common';
 })
 export class DayEntryDialogComponent {
   constructor(
-    public dialogRef: MatDialogRef<DayEntryDialogComponent>,
+    private dialogRef: MatDialogRef<DayEntryDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { selectedDayEntries: HistoryTimeline[] }
   ) {}
 

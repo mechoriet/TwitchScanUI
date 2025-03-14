@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { Component, ViewChild } from '@angular/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { HeatmapSelectionComponent } from './heatmap-selection.component';
 
@@ -35,11 +35,16 @@ export class HeatmapDialogOpener {
       <app-heatmap-selection></app-heatmap-selection>
     </div>
     <div mat-dialog-actions class="justify-content-end d-flex pt-2">
-      <button mat-button mat-dialog-close class="btn btn-outline-secondary">Close</button>
+      <button mat-button (click)="onClose()" mat-dialog-close class="btn btn-outline-secondary">Close</button>
     </div>
   `,
   imports: [CommonModule, HeatmapSelectionComponent],
 })
 export class HeatmapDialog {
-  constructor() {}
+  constructor(
+      private dialogRef: MatDialogRef<HeatmapDialog>) {}
+
+  onClose(): void {
+    this.dialogRef.close();
+  }
 }
