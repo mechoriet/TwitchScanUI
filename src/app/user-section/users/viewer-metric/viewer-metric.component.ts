@@ -8,7 +8,6 @@ import { _DeepPartialArray } from 'chart.js/dist/types/utils';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../services/app-service/data.service';
 import { Subscription } from 'rxjs';
-import { openStream } from '../../../helper/general.helper';
 import { SettingsService } from '../../../services/app-service/settings.service';
 import { getFormattedDateSince } from '../../../helper/date.helper';
 import { RaidListComponent } from "./raid-list.component";
@@ -132,6 +131,7 @@ export class ViewerMetricComponent implements OnDestroy {
   hideRaidAnnotation(): void {
     this.hideRaidAnnotations = !this.hideRaidAnnotations;
     if (this.hideRaidAnnotations) {
+      this.raidsExpanded = false;
       this.removeAnnotations();
     } else {
       this.updateAnnotations();
