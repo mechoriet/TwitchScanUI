@@ -1,9 +1,10 @@
-import { Component, Input, OnInit, ViewChild, ElementRef, AfterViewInit, OnChanges } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChatHistory, Emote } from '../../../models/chat-message.model';
 import { DataService } from '../../../services/app-service/data.service';
 import { openStream } from '../../../helper/general.helper';
 import { Modal } from 'bootstrap';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-chat-history',
@@ -37,7 +38,7 @@ import { Modal } from 'bootstrap';
     </div>
     `,
 })
-export class ChatHistoryComponent implements OnInit, AfterViewInit, OnChanges {
+export class ChatHistoryComponent implements OnInit, AfterViewInit, OnDestroy {
     @Input() channelName!: string;
     @Input() username!: string;
     loading = true;
@@ -45,6 +46,7 @@ export class ChatHistoryComponent implements OnInit, AfterViewInit, OnChanges {
     @ViewChild('historyModal', { static: true }) historyModalElement!: ElementRef;
 
     chatHistory: ChatHistory[] = [];
+    subscriptions = new Subscription();
     private historyModal!: Modal;
 
     openStream = openStream;
@@ -55,6 +57,16 @@ export class ChatHistoryComponent implements OnInit, AfterViewInit, OnChanges {
         if (this.channelName && this.username) {
             this.fetchChatHistory();
         }
+
+        this.subscriptions.add(
+            this.dataService.chatHistorySubject.subscribe({
+                next: (data) => {
+                    this.chatHistory = [];
+                    this.username = data;
+                    this.fetchChatHistory();
+                    this.historyModal.show();
+                }
+            }));
     }
 
     ngAfterViewInit(): void {
@@ -62,15 +74,8 @@ export class ChatHistoryComponent implements OnInit, AfterViewInit, OnChanges {
         this.historyModal = new Modal(this.historyModalElement.nativeElement);
     }
 
-    ngOnChanges(): void {
-        if (this.channelName && this.username) {
-            this.fetchChatHistory();
-        }
-
-        // Check if the modal is initialized before trying to show it
-        if (this.historyModal) {
-            this.historyModal.show();
-        }
+    ngOnDestroy(): void {
+        this.subscriptions.unsubscribe();
     }
 
     private fetchChatHistory(): void {

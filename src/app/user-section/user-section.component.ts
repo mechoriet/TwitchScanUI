@@ -19,7 +19,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ChatHistoryComponent } from './users/chat-window/chat-history.component';
 import { Dropdown } from 'bootstrap';
 import { VodListComponent } from './users/vod-list/vod-list.component';
-import { HeatmapDialog } from '../user-dashboard/heatmap-selection/heatmap.dialog';
+import { HeatmapDialog } from './heatmap-selection/heatmap.dialog';
 
 @Component({
   selector: 'app-user-section',
@@ -90,17 +90,6 @@ export class UserSectionComponent implements OnInit, OnDestroy {
         this.settings = s;
       })
     );
-
-    this.subscriptions.add(
-      this.dataService.chatHistorySubject.subscribe({
-        next: (data) => {
-          // Need to reset to trigger ngchange
-          this.chatHistoryUsername = '';
-          setTimeout(() => {
-            this.chatHistoryUsername = data;
-          }, 100);          
-        }
-      }));
   }
 
   ngOnInit(): void {

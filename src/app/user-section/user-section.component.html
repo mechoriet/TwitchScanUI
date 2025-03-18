@@ -120,9 +120,6 @@
   </div>
 </div>
 
-<app-twitch-stream *ngIf="settings.showStream" @fadeInOut></app-twitch-stream>
-<app-chat-history [channelName]="username" [username]="chatHistoryUsername"></app-chat-history>
-
 <!-- Loading Template -->
 <ng-template #loadingContent>
   <div class="d-flex justify-content-center align-items-center w-100 h-100">
@@ -160,3 +157,7 @@
 
 <!-- VOD Modal -->
  <app-vod-list [username]="username"></app-vod-list>
+<!-- Heatmap Modal -->
+ <app-twitch-stream *ngIf="settings.showStream" @fadeInOut></app-twitch-stream>
+<!-- Chat Modal -->
+ <app-chat-history [channelName]="username" [username]="chatHistoryUsername"></app-chat-history>

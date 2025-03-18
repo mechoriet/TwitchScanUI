@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 export class Settings {
-    showChartAnimations: any | false;
+    showChartAnimations: any | false = false;
     showStream = false;
     streamWidth = 400;
     streamHeight = 300;
@@ -16,7 +16,6 @@ export class Settings {
     }
 
     constructor() {
-        this.setAnimation();
     }
 }
 
