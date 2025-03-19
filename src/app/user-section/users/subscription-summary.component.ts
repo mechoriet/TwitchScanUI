@@ -61,7 +61,7 @@ export class SubscriptionSummaryComponent implements OnDestroy {
 
     // Chart Data Structure
     summaryChartData: ChartConfiguration<'bar'>['data'] = {
-        labels: ['Total Subscriptions', 'New Subscriptions', 'Renewed Subscriptions', 'Gifted Subscriptions', 'Community Subscriptions'],
+        labels: ['Total', 'New', 'Renewed', 'Gifted', 'Community'],
         datasets: [
             {
                 label: 'Value',
