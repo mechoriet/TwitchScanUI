@@ -19,10 +19,8 @@ Chart.register(annotationPlugin);
   selector: 'app-channel-metrics',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light chart-container text-center h-100 m-0 px-2" *ngIf="chartData.datasets.length > 0 && chartData.datasets[0].data.length > 0; else noData">
-      <h5 class="m-0" [class.hidden]="raidsExpanded">
-        Viewers Over Time (UTC)
-        <i class="fa-solid" 
+    <div class="h-100 m-0 w-100 px-2" *ngIf="chartData.datasets.length > 0 && chartData.datasets[0].data.length > 0; else noData">
+    <i class="fa-solid position-absolute end-0 pe-3" 
         [ngClass]="{
               'trend-stable fa-minus':
                 userData.ChannelMetrics.trend === Trend.Stable,
@@ -32,9 +30,7 @@ Chart.register(annotationPlugin);
                 userData.ChannelMetrics.trend === Trend.Decreasing
             }">
         </i>
-      </h5>
-      <small class="text-muted" [class.hidden]="raidsExpanded">{{ userData.ChannelMetrics.totalWatchTime | number: '1.1-1' }}h total watchtime</small>
-      <canvas class="no-drag px-2"
+      <canvas class="no-drag px-1 pt-2"
         (dblclick)="resetZoom()"        
         baseChart
         [data]="chartData"
@@ -42,21 +38,14 @@ Chart.register(annotationPlugin);
         [type]="'line'"
         [class.hidden]="raidsExpanded"
       ></canvas>
-
-      <!-- Button to hide raid annotations -->
-      <button style="z-index: 10" class="btn btn-sm btn-outline-secondary mt-2 position-absolute top-0 end-0 me-2" (click)="hideRaidAnnotation()">
-        <i class="fa-solid fa-user-plus me-1"></i>
-        {{ hideRaidAnnotations ? 'Show' : 'Hide' }} Raids ({{ userData.RaidStatistic?.raidsOverTime?.length || 0 }})
-      </button>
       
       <!-- Badges for all the raiders -->
       <app-raid-list *ngIf="userData.RaidStatistic?.raidsOverTime && userData.RaidStatistic!.raidsOverTime.length > 0 && !hideRaidAnnotations"
-        class="position-absolute top-0 start-0 ms-2 overflow-auto w-100 pe-3"
+        class="position-absolute top-0 start-0 ms-5 overflow-auto"
         [class.raids-shown]="raidsExpanded"
         [raids]="userData.RaidStatistic?.raidsOverTime || []"
         [colorMap]="raidColorMap"
         [openChatFn]="openChat.bind(this)"
-        [toggleRaidsFn]="toggleRaids.bind(this)"
         [getFormattedDateSince]="getFormattedDateSince"
       ></app-raid-list>
     </div>

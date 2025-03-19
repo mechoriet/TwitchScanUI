@@ -12,22 +12,18 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-subscriptions-over-time',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="hasData(); else noSubs">
-      <h5>
-        Contributions Over Time (UTC)
-        <i
-          class="fa-solid"
+    <div class="h-100 w-100 m-0 px-2" *ngIf="hasData(); else noSubs">
+        <i class="fa-solid position-absolute end-0 pe-3"
           [ngClass]="{
             'trend-stable fa-minus': userData.SubscriptionStatistic.trend === Trend.Stable,
             'trend-up fa-arrow-up': userData.SubscriptionStatistic.trend === Trend.Increasing,
             'trend-down fa-arrow-down': userData.SubscriptionStatistic.trend === Trend.Decreasing
           }"
         ></i>
-      </h5>
 
       <!-- Mixed Chart: Line for Subscriptions and Bar for Bits Cheered -->
       <canvas (dblclick)="resetZoom()" 
-              class="no-drag px-2"       
+              class="no-drag px-1"       
               baseChart
               [data]="chartData"
               [options]="chartOptions"
@@ -65,7 +61,7 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
       if (this.chartOptions) {
         // Update the animation setting
         this.chartOptions.animation = s.showChartAnimations;
-    
+
         // Force Chart.js to re-render the chart with the new options
         if (this.chart && this.chart.chart) {
           this.chart.chart.config.options = this.chartOptions;
@@ -189,7 +185,7 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
     // --- Process Subscriptions Data ---
     const subscriptions = this.userData?.SubscriptionStatistic?.subscriptionsOverTime;
     let interpolatedData: { time: Date; value: number }[] = []; // Declare interpolatedData here
-  
+
     if (!subscriptions || subscriptions.length === 0) {
       this.chartData.datasets[0].data = [];
       this.chartData.labels = [];
@@ -198,14 +194,14 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
         time: sub.key,
         value: sub.value,
       }));
-  
+
       interpolatedData = this.interpolationService.interpolateData(rawData, 60 * 1000);
       this.chartData.labels = interpolatedData.map(entry =>
         this.interpolationService.formatTime(entry.time)
       );
       this.chartData.datasets[0].data = interpolatedData.map(entry => entry.value);
     }
-  
+
     // --- Process Bits Cheered Data ---
     const bitsDataObj = this.userData?.PeakActivityPeriods.bitsOverTime;
     if (bitsDataObj) {
@@ -214,13 +210,13 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
         value,
       }));
       // Align bits data with interpolated subscription times
-      this.chartData.datasets[1].data = interpolatedData.map(entry => 
+      this.chartData.datasets[1].data = interpolatedData.map(entry =>
         rawData.find(rawEntry => rawEntry.time === this.interpolationService.formatTime(entry.time))?.value || 0
       );
     } else {
       this.chartData.datasets[1].data = [];
     }
-  
+
     // Update the chart
     this.chart?.chart?.update();
   }

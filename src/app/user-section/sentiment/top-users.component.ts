@@ -11,9 +11,8 @@ import { DataService } from '../../services/app-service/data.service';
   selector: 'app-top-users',
   standalone: true,
   template: `
-    <div class="card border-0 bg-dark text-light text-center px-2"
+    <div class="h-100 text-center m-0"
         *ngIf="userChartData.datasets[0].data.length > 0; else noData">
-      <h5>{{ title }}</h5>
 
       <!-- Bar Chart for Top Users -->
       <canvas
@@ -47,7 +46,6 @@ import { DataService } from '../../services/app-service/data.service';
 })
 export class TopUsersComponent implements OnInit, OnChanges {
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
-  @Input() title: string = '';
   @Input() users: SentimentUser[] = [];
   subscriptions: Subscription = new Subscription();
 
@@ -65,8 +63,8 @@ export class TopUsersComponent implements OnInit, OnChanges {
       {
         label: 'Sentiment',
         data: [],
-        backgroundColor: 'rgba(153, 102, 255, 0.6)',
-        borderColor: 'rgba(153, 102, 255, 1)',
+        backgroundColor: 'rgba(186, 102, 255, 0.6)',
+        borderColor: 'rgba(186, 102, 255, 1)',
         borderWidth: 1,
       },
     ],

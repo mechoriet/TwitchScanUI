@@ -10,8 +10,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
     selector: 'app-sentence-frequency',
     standalone: true,
     template: `
-    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2" *ngIf="sentenceFrequencyChartData.datasets[0].data.length > 0; else noData">
-      <h5>Sentence Frequency</h5>
+    <div class="m-0 h-100 w-100" *ngIf="sentenceFrequencyChartData.datasets[0].data.length > 0; else noData">
       <canvas
         baseChart
         [data]="sentenceFrequencyChartData"

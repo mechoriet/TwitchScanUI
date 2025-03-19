@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
   selector: 'app-thumbnail',
   standalone: true,
   template: `
-    <div *ngIf="imageKeys.length > 0" class="card border-secondary bg-dark text-light text-center h-100 w-100 m-0">
+    <div *ngIf="imageKeys.length > 0" class="text-center h-100 w-100 m-0">
       <div class="thumbnail">
         <img
           [src]="imageBlobMap.get(imageKeys[currentIndex])"
@@ -40,7 +40,7 @@ import { Subscription } from 'rxjs';
         justify-content: center;
         align-items: center;
         position: relative;
-        border: 2px solid #555;
+        border: 1px solid #555;
         width: 100%;
         height: 300px; /* Set a fixed height for thumbnails */
       }

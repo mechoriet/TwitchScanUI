@@ -13,10 +13,8 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-peak-activity-periods',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light h-100 text-center m-0 px-2" *ngIf="chartData.datasets[0].data.length > 0; else noData">
-          <h5>Messages over time (UTC)
-          <i
-            class="fa-solid"
+    <div class="h-100 text-center m-0" *ngIf="chartData.datasets[0].data.length > 0; else noData">
+        <i class="fa-solid position-absolute end-0 pe-3" 
             [ngClass]="{
               'trend-stable fa-minus':
                 userData.PeakActivityPeriods.trend === Trend.Stable,
@@ -25,9 +23,10 @@ import { SettingsService } from '../../services/app-service/settings.service';
               'trend-down fa-arrow-down':
                 userData.PeakActivityPeriods.trend === Trend.Decreasing
             }"
-          ></i></h5>
+          ></i>
+          
           <canvas (dblclick)="resetZoom()"    
-          class="no-drag px-2"               
+          class="no-drag px-1"               
             baseChart
             [data]="chartData"
             [options]="chartOptions"

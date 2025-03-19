@@ -14,8 +14,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-subscription-statistic',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="topSubscribersChartData.datasets[0].data.length > 0; else noSubs">
-      <h5>Top Gifter</h5>
+    <div class="h-100 w-100 m-0 px-2" *ngIf="topSubscribersChartData.datasets[0].data.length > 0; else noSubs">
       <!-- Bar Chart for Top Subscribers -->
       <canvas
         class="canvas no-drag"

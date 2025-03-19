@@ -11,9 +11,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
     selector: 'app-subscription-summary',
     standalone: true,
     template: `
-    <div class="card border-secondary bg-dark text-light text-center h-100 m-0 px-2" *ngIf="anySubscriptions(); else noSubs">
-      <h5>Subscription Summary</h5>
-      <!-- Subscription Summary Chart -->
+    <div class="h-100 w-100 m-0 px-2" *ngIf="anySubscriptions(); else noSubs">
       <canvas        
         baseChart
         [data]="summaryChartData"

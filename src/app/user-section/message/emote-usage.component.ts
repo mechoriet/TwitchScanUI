@@ -11,8 +11,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-emote-usage',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2" *ngIf="hasData(); else noEmotes">
-    <h5>Emote Usage</h5>   
+    <div class="m-0 h-100 w-100" *ngIf="hasData(); else noEmotes">
       <canvas
         *ngIf="emoteChartData.datasets[0].data.length > 0"
         baseChart

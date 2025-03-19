@@ -44,7 +44,7 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   userData: UserData | undefined;
   loading: boolean = true;
   notDismissed: boolean = true;
-  showComponentNames: boolean = false;
+  showComponentNames: boolean = true;
   info: string = ''; // Error/info messages
   subscriptions: Subscription = new Subscription();
   inHistory = false;

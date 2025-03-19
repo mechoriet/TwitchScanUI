@@ -10,13 +10,12 @@ import { Subscription } from 'rxjs';
   selector: 'app-sentiment-analysis',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light m-0 h-100">
-        <div class="row h-100">
+    <div class="m-0 h-100 w-100">
+        <div class="row m-0 w-100 h-100">
           <div class="col-12 col-md-6 h-100">
             <ng-container>
               <app-top-users
                 class="mb-2"
-                [title]="titlePositive"
                 [users]="userData.SentimentAnalysis.topPositiveUsers"
               ></app-top-users>
             </ng-container>
@@ -24,7 +23,6 @@ import { Subscription } from 'rxjs';
           <div class="col-12 col-md-6 h-100">
             <ng-container>
               <app-top-users
-                [title]="titleNegative"
                 [users]="userData.SentimentAnalysis.topNegativeUsers"
               ></app-top-users>
             </ng-container>
@@ -37,8 +35,6 @@ import { Subscription } from 'rxjs';
 export class SentimentAnalysisComponent implements OnDestroy {
   userData!: UserData;
   @Input() averageMessageLength: number = 0;
-  titlePositive = 'Most Positive Users';
-  titleNegative = 'Most Negative Users';
   subscriptions: Subscription = new Subscription();
 
   constructor(public dataService: DataService) {

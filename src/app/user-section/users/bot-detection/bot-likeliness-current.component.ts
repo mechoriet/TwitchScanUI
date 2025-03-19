@@ -9,7 +9,7 @@ import { DataService } from '../../../services/app-service/data.service';
   selector: 'app-bot-likeliness-current',
   standalone: true,
   template: `
-    <div class="card border-0 bg-dark text-light text-center px-2 m-0 h-100" *ngIf="botLikelinessChartData.datasets[0].data.length > 0; else noData">
+    <div class="m-0 h-100 w-100" *ngIf="botLikelinessChartData.datasets[0].data.length > 0; else noData">
       <h5>Top Suspicious Users</h5>
       <canvas
         baseChart

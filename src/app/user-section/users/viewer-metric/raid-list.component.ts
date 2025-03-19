@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div class="raid-list-container">
-      <button class="btn btn-sm btn-outline-secondary mb-1" (click)="toggleRaidList()">
+      <button class="btn btn-sm border-0 text-muted mb-1" (click)="toggleRaidList()">
         <i class="fa-solid fa-user-plus me-1"></i>
         Raids ({{ raids.length }})
         <i class="fa-solid" [ngClass]="isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
@@ -38,6 +38,7 @@ import { CommonModule } from '@angular/common';
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 4px;
       margin-bottom: 8px;
+      background-color: #000A;
     }
     .raid-panel-content {
       padding: 4px;

@@ -14,10 +14,8 @@ Chart.register(zoomPlugin);
   selector: 'app-sentiment-over-time',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center m-0 px-2" *ngIf="chartData.datasets[0].data.length > 0; else noData">
-      <h5>Sentiment Over Time (UTC)
-          <i
-            class="fa-solid"
+    <div class="h-100 text-center m-0" *ngIf="chartData.datasets[0].data.length > 0; else noData">
+      <i class="fa-solid position-absolute end-0 pe-3" 
             [ngClass]="{
               'trend-stable fa-minus':
                 userData.SentimentAnalysis.trend === Trend.Stable,
@@ -26,11 +24,11 @@ Chart.register(zoomPlugin);
               'trend-down fa-arrow-down':
                 userData.SentimentAnalysis.trend === Trend.Decreasing
             }"
-          ></i></h5>
+          ></i>
 
       <!-- Line Chart for Sentiment Over Time -->
       <canvas (dblclick)="resetZoom()"        
-      class="no-drag px-2"       
+      class="no-drag px-1"       
         baseChart
         [data]="chartData"
         [options]="chartOptions"
@@ -138,8 +136,8 @@ export class SentimentOverTimeComponent implements OnDestroy {
       {
         label: 'Compound',
         data: [],
-        borderColor: '#e7298a',
-        backgroundColor: 'rgba(231, 41, 138, 0.2)',
+        borderColor: 'rgba(186, 41, 231, 0.8)',
+        backgroundColor: 'rgba(186, 41, 231, 0.2)',
         fill: true,
         tension: 0.3,
         pointRadius: 0,

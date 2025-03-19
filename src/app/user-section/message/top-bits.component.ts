@@ -11,8 +11,7 @@ import { SettingsService } from '../../services/app-service/settings.service';
   selector: 'app-top-bits',
   standalone: true,
   template: `
-    <div class="card border-secondary bg-dark text-light text-center m-0 h-100 px-2" *ngIf="hasData(); else noBits">
-    <h5>Bits Cheered</h5>   
+    <div class="m-0 h-100 w-100" *ngIf="hasData(); else noBits">
       <canvas
         *ngIf="bitChartData.datasets[0].data.length > 0"
         class="canvas no-drag"

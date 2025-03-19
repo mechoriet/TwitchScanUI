@@ -1,13 +1,14 @@
 <!-- Navigation Bar -->
-<nav class="navbar main-nav bg-glass navbar-expand-lg fixed-top border-glow-transition border-glow"
+<nav class="navbar main-nav bg-glass navbar-expand-lg fixed-top border-glow-transition"
     @fadeInOut>
     <div class="container-fluid my-1">
-        <!-- Brand Icon -->
-        <a class="navbar-brand pointer position-absolute ms-2" @fadeInOut>
-            <i class="fa-solid fa-spider text-warning home-icon"></i>
+        <!-- Brand Icon with Animation -->
+        <a class="navbar-brand pointer position-absolute ms-2 brand-container" @fadeInOut>
+            <i class="fa-solid fa-spider text-twitch home-icon pulse-animation"></i>
+            <span class="brand-text ms-2 d-none d-md-inline">TwitchTrends<span class="text-twitch">.tv</span></span>
         </a>
 
-        <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        <button class="navbar-toggler ms-auto custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false"
             aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -15,135 +16,173 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto">
-                <li class="nav-item my-1" style="width: 50vw;">
-                    <div class="input-group rounded flex-grow-1 me-2">
-                        <span class="input-group-text bg-dark border-secondary text-light" id="basic-addon1">
-                            <i class="fa-brands fa-twitch"></i>
+                <li class="nav-item my-1 search-container">
+                    <div class="input-group rounded search-box">
+                        <span class="input-group-text bg-dark border-twitch text-light search-icon-container">
+                            <i class="fa-brands fa-twitch text-twitch"></i>
                         </span>
-                        <input #userNameInput class="form-control bg-dark border-secondary text-light text-center"
+                        <input #userNameInput class="form-control bg-dark border-twitch text-light text-center search-input"
                             type="text" [(ngModel)]="username" [disabled]="loading"
-                            placeholder="Search Twitch channel..." aria-label="Twitch channel username" />
-                        <button class="btn btn-dark border-secondary" type="button"
+                            placeholder="Search channels..." aria-label="Twitch channel username" />
+                        <button class="btn bg-twitch text-white search-button" type="button"
                             title="Start Monitoring">
-                            <i class="fa-solid fa-play text-warning"></i>
+                            <i class="fa-solid fa-play"></i>
                         </button>
-                        <button *ngIf="loading" class="btn btn-dark border-secondary" type="button"
+                        <button *ngIf="loading" class="btn bg-dark border-twitch" type="button"
                             title="Loading data..." disabled>
-                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <i class="fa-solid fa-spinner fa-spin text-twitch"></i>
                         </button>
                     </div>
                 </li>
             </ul>
         </div>
 
-        <!-- Twitch login button on the right -->
+        <!-- Twitch login button with improved styles -->
         <div *ngIf="userAccount === undefined" class="d-flex">
-            <button class="btn btn-dark border-secondary" type="button" (click)="twitchAuthService.loginWithTwitch()"
+            <button class="btn login-btn" type="button" (click)="twitchAuthService.loginWithTwitch()"
                 title="Login with Twitch">
-                <i class="fa-brands fa-twitch text-warning px-1"></i>
+                <i class="fa-brands fa-twitch me-2"></i>Login
             </button>
         </div>
 
-        <!-- Otherwise show user account profile picture -->
-        <div *ngIf="userAccount !== undefined" class="d-flex">
-            <button class="btn btn-dark border-secondary" type="button" (click)="logout()" title="Logout">
-                <img [src]="userAccount.profileImageUrl" class="rounded-circle" style="height: 30px; width: 30px;"
-                    alt="User Profile Picture" />
-            </button>
+        <!-- User account profile with improved display -->
+        <div *ngIf="userAccount !== undefined" class="d-flex align-items-center">
+            <span class="text-light me-2 d-none d-md-inline username-display">{{userAccount.displayName}}</span>
+            <div class="dropdown">
+                <button class="btn user-profile-btn" type="button" (click)="logout()" title="Logout">
+                    <img [src]="userAccount.profileImageUrl" class="rounded-circle profile-image"
+                        alt="User Profile Picture" />
+                </button>
+            </div>
         </div>
     </div>
 </nav>
 
-<!-- Loading Spinner with Backdrop -->
+<!-- Loading Animation -->
 <div class="loading-backdrop" *ngIf="loading">
-    <i class="fa-solid fa-spider fa-flip text-warning"></i>
+    <div class="loading-container">
+        <i class="fa-solid fa-spider fa-bounce text-twitch loading-icon"></i>
+        <div class="loading-text">
+            <span>L</span><span>O</span><span>A</span><span>D</span><span>I</span><span>N</span><span>G</span>
+        </div>
+        <div class="loading-subtext">Gathering streams...</div>
+    </div>
 </div>
 
-<!-- Alerts -->
+<!-- Improved Alerts -->
 <div class="toast-container position-fixed top-0 end-0 p-3">
-    <div class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true"
+    <div class="toast align-items-center border-0 notification-toast" role="alert" aria-live="assertive" aria-atomic="true"
         [class.show]="notDismissed">
         <div class="d-flex">
             <div class="toast-body">
-                <small>v{{version}}</small>
-                <p class="text-danger text-center"><strong>Important Notice:</strong></p>
-                <p>This project is still very much a work in progress. As such, there may be bugs and issues that
-                    need to be resolved.<br>
-                    <small>You can reach me at <a class="text-decoration-none" href="mailto:kappa@twitchtrends.tv"><i
-                                class="fa-solid fa-envelope"></i>{{'kappa@twitchtrends.tv'}}</a></small>
-                </p>
-                <p>The app works with live Twitch data. If you want to add your own channel you can do so by logging in with your Twitch account (top right).</p>
-                <p>Once monitoring is initiated, data will gradually accumulate.</p>
-                <p>Historical data is automatically saved once a channel goes offline.</p>
-                <p class="text-danger"><strong>Note:</strong> Data persistence is not guaranteed, as live updates are
-                    ongoing.</p>
+                <div class="version-badge">v{{version}}</div>
+                <div class="notification-header">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    <strong>IMPORTANT NOTICE</strong>
+                </div>
+                <div class="notification-content">
+                    <p>This project is still in beta. There may be bugs and issues that need to be resolved.</p>
+                    <p>Contact: <a class="text-decoration-none contact-link" href="mailto:kappa@twitchtrends.tv">
+                        <i class="fa-solid fa-envelope me-1"></i>
+                        kappa(at)twitchtrends.tv
+                    </a></p>
+                    <div class="features-list">
+                        <div class="feature-item"><i class="fa-solid fa-check text-success me-2"></i>Login with Twitch to add your channel</div>
+                        <div class="feature-item"><i class="fa-solid fa-check text-success me-2"></i>Data accumulates as channels are monitored</div>
+                        <div class="feature-item"><i class="fa-solid fa-check text-success me-2"></i>Automatic history saving when channels go offline</div>
+                    </div>
+                    <p class="data-warning"><i class="fa-solid fa-database me-1"></i>Data persistence is not guaranteed during ongoing updates</p>
+                </div>
             </div>
-            <button type="button" class="btn-close btn-close-black position-absolute top-0 end-0 mt-4 me-4"
+            <button type="button" class="btn-close btn-close-white notification-close"
                 data-bs-dismiss="toast" aria-label="Close" (click)="saveDismissed()"></button>
         </div>
     </div>
 </div>
+
 <!-- Main Content -->
-<div class="container-fluid mt-5 mb-4 d-flex justify-content-center pt-4">
-
-
-    <!-- Information Alert -->
-    <div class="alert alert-info position-absolute bottom-0 start-0 ms-3 mb-3" *ngIf="info" @fadeInOut>
-        <span><strong>Information:</strong> {{ info }}</span>
+<div class="container-fluid dashboard-container">
+    <!-- Information Alert with improved styling -->
+    <div class="alert custom-alert position-fixed bottom-0 start-0 ms-3 mb-3" *ngIf="info" @fadeInOut>
+        <i class="fa-solid fa-info-circle me-2"></i>
+        <span>{{ info }}</span>
         <button type="button" class="btn-close position-absolute end-0 me-3" (click)="info = ''"></button>
     </div>
 
-    <!-- Previously Added Channels -->
-    <div class="channel-container text-light p-0"
-        *ngIf="filteredChannels().length > 0" @listAnimation>
-        <!-- Display Cards for Channels -->
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 row-cols-xl-6 row-cols-xxl-6 g-4 p-3">
+    <!-- No Channels Message -->
+    <div class="no-channels-container" *ngIf="filteredChannels().length === 0 && !loading">
+        <div class="no-channels-content">
+            <i class="fa-solid fa-tv-alt text-twitch mb-3"></i>
+            <h4>No channels found</h4>
+            <p>Search for a Twitch channel above or login to add your own</p>
+        </div>
+    </div>
+
+    <!-- Previously Added Channels - Improved Grid -->
+    <div class="channel-grid" *ngIf="filteredChannels().length > 0" @listAnimation>
+        <!-- Channel Cards with Better Design -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5 row-cols-xxxl-6 g-4">
             <div class="col" *ngFor="let channel of filteredChannels(); trackBy: trackByChannelId"
                 (click)="username = channel.channelName; fetchNewData()" @moveAnimation>
-                <div class="card h-100 bg-glass text-light border-secondary pointer channel-card border-glow-transition">
-                    <!-- Channel Thumbnail -->
-                    <div class="position-relative">
-                        <img class="card-img-top" style="height: 160px; object-fit: cover;"
+                <div class="stream-card" [ngClass]="{'online': channel.isOnline, 'offline': !channel.isOnline}">
+                    <!-- Channel Thumbnail with Improved Overlay -->
+                    <div class="thumbnail-container">
+                        <div class="stream-status-indicator" [ngClass]="{'online': channel.isOnline, 'offline': !channel.isOnline}">
+                            <span *ngIf="channel.isOnline">LIVE</span>
+                            <span *ngIf="!channel.isOnline">OFFLINE</span>
+                        </div>
+
+                        <img class="thumbnail-img" 
                             [src]="'https://static-cdn.jtvnw.net/previews-ttv/live_user_' + channel.channelName.toLowerCase() + '-320x180.jpg' + '?t=' + getTimeSince(channel.streamingSince)"
                             alt="Channel Thumbnail" />
-                        <!-- Viewer Count Badge -->
-                        <span class="badge bg-danger position-absolute top-0 end-0 m-2"><i class="fa-solid fa-eye"></i>
-                            {{ channel.viewerCount |
-                            numberAbbreviator }}</span>
-                        <!-- Uptime -->
-                        <span *ngIf="channel.isOnline && channel.uptime"
-                            class="badge bg-success position-absolute bottom-0 start-50 translate-middle-x mb-2">
-                            <i class="fa-solid fa-clock"></i> {{ getTimeSince(channel.uptime) }}
-                        </span>
+
+                        <!-- Viewer Count Badge with Icon -->
+                        <div class="viewer-count" *ngIf="channel.isOnline">
+                            <i class="fa-solid fa-eye me-1"></i>
+                            {{ channel.viewerCount | numberAbbreviator }}
+                        </div>
+
+                        <!-- Uptime Badge with Better Styling -->
+                        <div class="uptime-badge" *ngIf="channel.isOnline && channel.uptime">
+                            <i class="fa-solid fa-clock me-1"></i> {{ getTimeSince(channel.uptime) }}
+                        </div>
                     </div>
 
-                    <!-- Card Body -->
-                    <div class="card-body">
-                        <!-- Channel Info - Flexbox for Equal Spacing -->
-                        <div class="d-flex justify-content-between">
-                            <span class="text-warning text-truncate" style="max-width: 66%;"><strong>{{
-                                    channel.channelName }}</strong></span>
-                            <span><i class="fa-circle"
-                                    [ngClass]="{'fa-solid text-success': channel.isOnline, 'fa-regular text-danger': !channel.isOnline}"></i>
-                                {{ channel.isOnline ? 'Online' : 'Offline' }}
-                            </span>
-                        </div>
-                        <p *ngIf="channel.isOnline" [title]="channel.title" class="text-truncate m-0">
-                            <small>{{channel.title}}</small></p>
-                        <p *ngIf="channel.isOnline" [title]="channel.title"
-                            class="text-truncate text-muted text-center m-0"><small>{{channel.game}}</small></p>
-                        <div class="d-flex justify-content-between mt-3"
-                            *ngIf="viewportService.isFullScreenView$ | async">
-                            <span><strong>Messages:</strong></span>
-                            <span><span *ngIf="channel.isOnline; else noMessages">{{ channel.messageCount |
-                                    numberAbbreviator }}</span></span>
+                    <!-- Card Content with Better Layout -->
+                    <div class="stream-content text-light">
+                        <div class="channel-header">
+                            <h5 class="channel-name">{{ channel.channelName }}</h5>
+                            <div class="status-indicator" 
+                                 [ngClass]="{'online': channel.isOnline, 'offline': !channel.isOnline}">
+                                <i class="fa-circle" 
+                                   [ngClass]="{'fa-solid': channel.isOnline, 'fa-regular': !channel.isOnline}"></i>
+                            </div>
                         </div>
 
-                        <div class="d-flex justify-content-between mt-2"
-                            *ngIf="viewportService.isFullScreenView$ | async">
-                            <span><strong>Messages/min:</strong></span>
-                            <span><span *ngIf="channel.isOnline; else noMessages">{{
-                                    getMessagesPerMinute(channel.messageCount, channel.streamingSince) | number: '1.0-2'}}</span></span>
+                        <!-- Stream Info -->
+                        <div class="stream-info" *ngIf="channel.isOnline">
+                            <p class="stream-title" [title]="channel.title">{{channel.title}}</p>
+                            <div class="game-category">
+                                <i class="fa-solid fa-gamepad me-1"></i>
+                                <span>{{channel.game}}</span>
+                            </div>
+                        </div>
+
+                        <!-- Offline Message -->
+                        <div class="offline-message" *ngIf="!channel.isOnline">
+                            <p>Channel is currently offline</p>
+                        </div>
+
+                        <!-- Stats Bar -->
+                        <div class="stats-container" *ngIf="channel.isOnline">
+                            <div class="stat-item">
+                                <span class="stat-label">Messages</span>
+                                <span class="stat-value">{{ channel.messageCount | numberAbbreviator }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Msg/min</span>
+                                <span class="stat-value">{{ getMessagesPerMinute(channel.messageCount, channel.streamingSince) | number: '1.0-2' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

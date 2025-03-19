@@ -1,163 +1,200 @@
-<div class="d-flex position-fixed w-100 h-100 overflow-auto">
-  <!-- Sidebar with Component Toggles -->
-  <div class="sidebar bg-dark text-white p-3 d-flex flex-column">
-    <ul class="nav flex-column text-start">
-      <li class="nav-item dropdown">
-        <button #profileDropdownButton class="btn nav-btn dropdown-toggle text-muted" type="button" id="profileDropdown" (click)="toggleProfileDropdown()"
-          data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="fas fa-user text-light" title="Switch Profile"></i>
-          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames"
-            @fadeInOut>Profile</span>
-        </button>
-        <ul class="dropdown-menu bg-glass" aria-labelledby="profileDropdown" style="width: max-content;">
-          <li *ngFor="let profile of profiles">
-            <div class="d-flex justify-content-between align-items-center p-2">
-              <div class="w-100">
-                <button class="btn btn-sm bg-dark text-light rounded-0 rounded-start"
-                  (click)="editProfileName(profile)"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-sm bg-dark text-light rounded-0 rounded-end" (click)="deleteProfile(profile)"><i
-                    class="fas fa-trash"></i></button>
-              </div>
-              <button class="dropdown-item text-light text-end"
-                [ngClass]="{'fw-bold text-warning': profile.name === activeProfile?.name}"
-                (click)="switchProfile(profile.name)">{{ profile.name }}</button>
+<div class="analytics-dashboard d-flex position-fixed w-100 h-100 overflow-auto">
+  <!-- Modern Sidebar with Component Toggles -->
+  <div class="sidebar bg-dark-gradient text-white">
+    <div class="sidebar-content">
+      <ul class="sidebar-nav">
+        <li class="sidebar-item dropdown">
+          <button #profileDropdownButton class="sidebar-btn dropdown-toggle" type="button" id="profileDropdown" 
+            (click)="toggleProfileDropdown()" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="sidebar-icon-container">
+              <i class="fas fa-user"></i>
             </div>
-          </li>
-          <li>
-            <hr class="dropdown-divider">
-          </li>
-          <li>
-            <button class="dropdown-item text-success" (click)="addNewProfile()">
-              <i class="fas fa-plus"></i> Add New Profile
-            </button>
-          </li>
-          <li>
-            <button class="dropdown-item text-danger" (click)="resetLayout()">
-              <i class="fas fa-trash"></i> Reset Active Profile
-            </button>
-          </li>
-        </ul>
-      </li>
-      <li class="nav-item" [class.text-center]="!showComponentNames" *ngFor="let component of components">
-        <button class="btn text-truncate nav-btn text-muted" [class.text-primary]="isActive(component.type)"
-          (click)="toggleComponent(component.type)">
-          <i [ngClass]="component.icon" title="{{ component.name }}"></i>
-          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-            {{ component.name }}
-          </span>
-        </button>
-      </li>
-      <hr class="bg-light">
-      <li class="nav-item" [class.text-center]="!showComponentNames">
-        <button class="btn text-truncate nav-btn" (click)="toggleStream()">
-          <i class="fas fa-tv" title="Toggle Stream"></i>
-          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-            Toggle Stream
-          </span>
-        </button>
-      </li>
-      <li class="nav-item" [class.text-center]="!showComponentNames">
-        <button class="btn text-truncate nav-btn" (click)="toggleAnimations()">
-          <i class="fas" [class.fa-chart-area]="settings.showChartAnimations"
-            [class.fa-circle-xmark]="!settings.showChartAnimations" title="Toggle Animations"></i>
-          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-            Toggle Animations
-          </span>
-        </button>
-      </li>
-      <li class="nav-item" [class.text-center]="!showComponentNames">
-        <button class="btn text-truncate nav-btn" (click)="showHeatmapModal()">
-          <i class="fas fa-calendar" title="Calendar"></i>
-          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-            Calendar
-          </span>
-        </button>
-      </li>
-      <li class="nav-item" [class.text-center]="!showComponentNames">
-        <button class="btn text-truncate nav-btn border-0" (click)="resetHistory()" *ngIf="inHistory">
-          <i class="fas fa-repeat" title="Reset Components"></i>
-          <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-            Reset Components
-          </span>
-        </button>
-      </li>
-    </ul>
+            <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>Profile</span>
+          </button>
+          <ul class="dropdown-menu profile-dropdown-menu" aria-labelledby="profileDropdown">
+            <li *ngFor="let profile of profiles">
+              <div class="profile-item">
+                <div class="profile-actions">
+                  <button class="action-btn edit-btn" (click)="editProfileName(profile)" title="Edit Profile">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="action-btn delete-btn" (click)="deleteProfile(profile)" title="Delete Profile">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+                <button class="profile-select-btn" [ngClass]="{'active': profile.name === activeProfile?.name}"
+                  (click)="switchProfile(profile.name)">{{ profile.name }}</button>
+              </div>
+            </li>
+            <li class="dropdown-divider-container">
+              <div class="dropdown-divider"></div>
+            </li>
+            <li>
+              <button class="dropdown-action-btn add-btn" (click)="addNewProfile()">
+                <i class="fas fa-plus me-2"></i> Add New Profile
+              </button>
+            </li>
+            <li>
+              <button class="dropdown-action-btn reset-btn" (click)="resetLayout()">
+                <i class="fas fa-trash me-2"></i> Reset Active Profile
+              </button>
+            </li>
+          </ul>
+        </li>
 
-    <!-- Spacer to push the Home button to the bottom -->
-    <div class="mt-auto">
-      <ul class="nav flex-column">
-        <li class="nav-item" [class.text-center]="!showComponentNames">
-          <button class="btn text-truncate nav-btn" (click)="showComponentNames = !showComponentNames">
-            <i class="fas fa-eye" title="{{showComponentNames ? 'Hide' : 'Show'}} Menu"></i>
-            <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-              Hide Menu
-            </span>
+        <!-- Component Toggle Buttons -->
+        <li class="sidebar-item" *ngFor="let component of components" [ngClass]="{'text-center': !showComponentNames}">
+          <button class="sidebar-btn" [ngClass]="{'active': isActive(component.type)}"
+            (click)="toggleComponent(component.type)">
+            <div class="sidebar-icon-container">
+              <i [ngClass]="component.icon"></i>
+            </div>
+            <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>{{ component.name }}</span>
           </button>
         </li>
-        <li class="nav-item" [class.text-center]="!showComponentNames">
-          <button class="btn text-truncate nav-btn" (click)="goToDashboard()">
-            <i class="fas fa-home" title="Home"></i>
-            <span class="d-none d-md-inline" *ngIf="showComponentNames" [class.ms-2]="showComponentNames" @fadeInOut>
-              Home
-            </span>
+
+        <li class="sidebar-divider">
+          <div class="divider-line"></div>
+        </li>
+
+        <!-- Utility Buttons -->
+        <li class="sidebar-item" [ngClass]="{'text-center': !showComponentNames}">
+          <button class="sidebar-btn" (click)="toggleStream()">
+            <div class="sidebar-icon-container">
+              <i class="fas fa-tv"></i>
+            </div>
+            <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>Toggle Stream</span>
+          </button>
+        </li>
+        <li class="sidebar-item" [ngClass]="{'text-center': !showComponentNames}">
+          <button class="sidebar-btn" (click)="toggleAnimations()">
+            <div class="sidebar-icon-container">
+              <i class="fas" [ngClass]="{'fa-chart-area': settings.showChartAnimations, 'fa-circle-xmark': !settings.showChartAnimations}"></i>
+            </div>
+            <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>Toggle Animations</span>
+          </button>
+        </li>
+        <li class="sidebar-item" [ngClass]="{'text-center': !showComponentNames}">
+          <button class="sidebar-btn" (click)="showHeatmapModal()">
+            <div class="sidebar-icon-container">
+              <i class="fas fa-calendar"></i>
+            </div>
+            <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>Calendar</span>
+          </button>
+        </li>
+        <li class="sidebar-item" [ngClass]="{'text-center': !showComponentNames}" *ngIf="inHistory">
+          <button class="sidebar-btn" (click)="resetHistory()">
+            <div class="sidebar-icon-container">
+              <i class="fas fa-repeat"></i>
+            </div>
+            <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>Reset Components</span>
           </button>
         </li>
       </ul>
+
+      <!-- Bottom Sidebar Controls -->
+      <div class="sidebar-footer">
+        <button class="sidebar-btn home-btn" (click)="goToDashboard()">
+          <div class="sidebar-icon-container">
+            <i class="fas fa-home"></i>
+          </div>
+          <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>Home</span>
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Main Content with Gridster Layout -->
-  <div class="content-wrapper px-4 w-100" *ngIf="userData && !loading; else loadingContent">
-    <gridster [options]="gridsterOptions" class="bg-glass">
-      <gridster-item *ngFor="let item of gridsterLayout" [item]="item" class="bg-glass m-2" @profileViewAnimation>
-        <ng-container *ngFor="let component of components">
-          <ng-container *ngIf="item.type === component.type">
-            <ng-container *ngComponentOutlet="component.component;"></ng-container>
+  <div class="content-area" *ngIf="userData && !loading; else loadingContent">
+    <gridster [options]="gridsterOptions" class="grid-container">
+      <gridster-item *ngFor="let item of gridsterLayout" [item]="item" class="grid-item d-flex flex-column" @profileViewAnimation>
+        <div class="card-header flex-shrink-0">
+          <span class="card-title" *ngFor="let component of components">
+            <ng-container *ngIf="item.type === component.type">
+              <i [ngClass]="component.icon + ' me-2'"></i>{{ component.name }}
+            </ng-container>
+          </span>
+        </div>
+        <div class="card-body flex-grow-1 p-0 position-relative">
+          <ng-container *ngFor="let component of components">
+            <ng-container *ngIf="item.type === component.type">
+              <div class="h-100 w-100 overflow-auto position-absolute top-0 start-0 py-2 px-1">
+                <ng-container *ngComponentOutlet="component.component"></ng-container>
+              </div>
+            </ng-container>
           </ng-container>
-        </ng-container>
+        </div>
       </gridster-item>
+      
     </gridster>
   </div>
 </div>
 
-<!-- Loading Template -->
+<!-- Enhanced Loading Template -->
 <ng-template #loadingContent>
-  <div class="d-flex justify-content-center align-items-center w-100 h-100">
-    <i class="fas fa-spider fa-flip text-warning fa-4x"></i>
+  <div class="loading-container">
+    <div class="loading-content">
+      <i class="fas fa-spider fa-bounce text-purple"></i>
+      <div class="loading-text">Loading Analytics</div>
+      <div class="loading-bar">
+        <div class="loading-progress"></div>
+      </div>
+    </div>
   </div>
 </ng-template>
 
-<!-- Alerts -->
+<!-- Improved Alerts -->
 <div class="toast-container position-fixed top-50 start-50 translate-middle">
-  <div class="toast align-items-center text-bg-info border-0 p-3 w-100" role="alert" aria-live="assertive"
-    aria-atomic="true" [class.show]="notDismissed">
-    <div class="d-flex">
-      <div class="toast-body">
-        <small>v{{version}}</small>
-        <p class="text-dark"><strong class="text-danger">Feature Notice:</strong></p>
-        <p>All timeline graphs on this page are fully <strong class="text-danger">scrollable</strong>, allowing you to
-          explore the data over different periods.
-          <br><strong class="text-danger">Double click</strong> a chart to reset the view.
-          <br><strong class="text-danger">Click</strong> legend items to hide them.
-        </p>
-        <p>The data automatically refreshes <strong class="text-danger">every second</strong>.</p>
-        <p>Thumbnails will be updated every <strong class="text-danger">5 minutes</strong>, as Twitch updates them
-          infrequently.</p>
-        <p>Every item on this page is <strong class="text-danger">drag-and-droppable</strong>, aswell as <strong
-            class="text-danger">resizeable</strong>.</p>
-        <p>Each item can be <strong class="text-danger">toggled</strong> by clicking the corresponding button in the
-          <strong class="text-danger">sidebar</strong>.
-        </p>
+  <div class="alert-toast" role="alert" aria-live="assertive" aria-atomic="true" [class.show]="notDismissed">
+    <div class="toast-header">
+      <i class="fas fa-info-circle me-2"></i>
+      <strong>Feature Guide</strong>
+      <small class="ms-auto">v{{version}}</small>
+      <button type="button" class="btn-close ms-2" data-bs-dismiss="toast" aria-label="Close" (click)="saveDismissed()"></button>
+    </div>
+    <div class="toast-body">
+      <div class="features-list">
+        <div class="feature-item">
+          <i class="fas fa-mouse me-2"></i>
+          <div>
+            <strong>Interactive Charts:</strong>
+            <p>All timeline graphs are fully <strong>scrollable</strong>. <strong>Double click</strong> to reset view.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-chart-line me-2"></i>
+          <div>
+            <strong>Legend Control:</strong>
+            <p>Click legend items to toggle visibility</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-sync me-2"></i>
+          <div>
+            <strong>Real-time Updates:</strong>
+            <p>Data refreshes <strong>every second</strong></p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-image me-2"></i>
+          <div>
+            <strong>Thumbnails:</strong>
+            <p>Updated every <strong>5 minutes</strong></p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-arrows-alt me-2"></i>
+          <div>
+            <strong>Customizable Layout:</strong>
+            <p>All items are <strong>draggable</strong> and <strong>resizable</strong></p>
+          </div>
+        </div>
       </div>
-      <button type="button" class="btn-close btn-close-black position-absolute top-0 end-0 m-2" data-bs-dismiss="toast"
-        aria-label="Close" (click)="saveDismissed()"></button>
     </div>
   </div>
 </div>
 
-<!-- VOD Modal -->
- <app-vod-list [username]="username"></app-vod-list>
-<!-- Heatmap Modal -->
- <app-twitch-stream *ngIf="settings.showStream" @fadeInOut></app-twitch-stream>
-<!-- Chat Modal -->
- <app-chat-history [channelName]="username" [username]="chatHistoryUsername"></app-chat-history>
+<!-- External Components -->
+<app-vod-list [username]="username"></app-vod-list>
+<app-twitch-stream *ngIf="settings.showStream" @fadeInOut></app-twitch-stream>
+<app-chat-history [channelName]="username" [username]="chatHistoryUsername"></app-chat-history>
