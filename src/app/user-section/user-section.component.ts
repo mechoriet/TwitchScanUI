@@ -44,7 +44,7 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   userData: UserData | undefined;
   loading: boolean = true;
   notDismissed: boolean = true;
-  showComponentNames: boolean = true;
+  showComponentNames: boolean = false;
   info: string = ''; // Error/info messages
   subscriptions: Subscription = new Subscription();
   inHistory = false;
@@ -95,7 +95,18 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (localStorage.getItem(version + 'dashboard-dismissed')) {
       this.notDismissed = false;
+    } else {
+      setTimeout(() => {
+        this.saveDismissed();
+      }, 10000);
     }
+
+    if (localStorage.getItem("showComponentNames") === "true") {
+      this.showComponentNames = true;
+    } else {
+      this.showComponentNames = false;
+    }
+
     this.subscriptions.add(
       this.dataService.userDataSubject.subscribe({
         next: (data) => {
@@ -141,6 +152,11 @@ export class UserSectionComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
     this.dataService.leaveChannel(this.username);
+  }
+
+  toggleComponentNames() {
+    this.showComponentNames = !this.showComponentNames;
+    localStorage.setItem("showComponentNames", this.showComponentNames ? "true" : "false");
   }
 
   // Initialize Gridster options

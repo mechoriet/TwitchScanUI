@@ -76,13 +76,13 @@ export const COMPONENTS = [
         component: ThumbnailComponent
     },
     {
-        name: 'Subscriptions Over Time',
+        name: 'Contributions Over Time',
         type: ComponentType.SubscriptionsOverTime,
         icon: 'fa-solid fa-handshake',
         component: SubscriptionsOverTimeComponent
     },
     {
-        name: 'Top Subscribers',
+        name: 'Top Contributors',
         type: ComponentType.TopSubscribers,
         icon: 'fa-solid fa-crown',
         component: TopSubscriberComponent

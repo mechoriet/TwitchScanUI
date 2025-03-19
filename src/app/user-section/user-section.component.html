@@ -1,6 +1,6 @@
 <div class="analytics-dashboard d-flex position-fixed w-100 h-100 overflow-auto">
   <!-- Modern Sidebar with Component Toggles -->
-  <div class="sidebar bg-dark-gradient text-white">
+  <div class="sidebar bg-dark-gradient text-white" [ngClass]="{'sidebar-expand': showComponentNames}">
     <div class="sidebar-content">
       <ul class="sidebar-nav">
         <li class="sidebar-item dropdown">
@@ -11,7 +11,7 @@
             </div>
             <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>Profile</span>
           </button>
-          <ul class="dropdown-menu profile-dropdown-menu" aria-labelledby="profileDropdown">
+          <ul class="dropdown-menu profile-dropdown-menu position-fixed" aria-labelledby="profileDropdown">
             <li *ngFor="let profile of profiles">
               <div class="profile-item">
                 <div class="profile-actions">
@@ -94,6 +94,12 @@
 
       <!-- Bottom Sidebar Controls -->
       <div class="sidebar-footer">
+        <button class="sidebar-btn home-btn" (click)="toggleComponentNames()">
+          <div class="sidebar-icon-container">
+            <i class="fas" [ngClass]="{'fa-eye': showComponentNames, 'fa-eye-slash': !showComponentNames}"></i>
+          </div>
+          <span class="sidebar-text" *ngIf="showComponentNames" @fadeInOut>{{ showComponentNames ? 'Hide' : 'Show' }} Labels</span>
+        </button>
         <button class="sidebar-btn home-btn" (click)="goToDashboard()">
           <div class="sidebar-icon-container">
             <i class="fas fa-home"></i>
@@ -144,7 +150,7 @@
 </ng-template>
 
 <!-- Improved Alerts -->
-<div class="toast-container position-fixed top-50 start-50 translate-middle">
+<div class="toast-container position-fixed top-50 start-50 translate-middle" style="z-index: 2000;">
   <div class="alert-toast" role="alert" aria-live="assertive" aria-atomic="true" [class.show]="notDismissed">
     <div class="toast-header">
       <i class="fas fa-info-circle me-2"></i>

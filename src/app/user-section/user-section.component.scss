@@ -31,14 +31,10 @@ $danger-color: #f44336;
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 100;
+}
 
-  &:hover {
-    width: 240px;
-
-    .sidebar-text {
-      opacity: 1;
-    }
-  }
+.sidebar-expand {
+  width: 240px;
 }
 
 .sidebar-content {
@@ -92,9 +88,7 @@ $danger-color: #f44336;
 
 .sidebar-text {
   margin-left: 16px;
-  opacity: 0;
   white-space: nowrap;
-  transition: opacity 0.2s ease;
 }
 
 .sidebar-divider {
