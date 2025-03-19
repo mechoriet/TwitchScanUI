@@ -5,13 +5,13 @@ import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { TwitchLogin } from '../../models/twitch.login.model';
 import { DataService } from '../app-service/data.service';
-import { backendUrl, frontendUrl } from '../../general/variables';
+import { backendUrl, frontendUrl, twitchAppId } from '../../general/variables';
 
 @Injectable({
     providedIn: 'root',
 })
 export class TwitchAuthService {
-    private clientId = 'otz0lwdmgk9zapx2jnuyh32do1qgj7';
+    private clientId = twitchAppId;
     private redirectUri = frontendUrl + 'auth-callback';
     private twitchAuthUrl = 'https://id.twitch.tv/oauth2/authorize';
     private userAccount: BehaviorSubject<TwitchLogin | undefined> = new BehaviorSubject<TwitchLogin | undefined>(undefined);
