@@ -5,4 +5,6 @@ export const environment = {
   twitchEmbedUrl: 'localhost',
   frontendUrl: 'http://localhost:4200/',
   twitchappid: '',
+  websiteName: 'TwitchTrends',
+  websiteEnding: '.tv',
 };

@@ -13,7 +13,7 @@ import { getMessagesPerMinute } from '../helper/custom-calc.helper';
 import { ViewPortService } from '../helper/view-port.service';
 import { TwitchAuthService } from '../services/twitch-service/twitch-auth.service';
 import { TwitchLogin } from '../models/twitch.login.model';
-import { version } from '../general/variables';
+import { version, websiteEnding, websiteName } from '../general/variables';
 
 @Component({
     selector: 'app-user-dashboard',
@@ -43,6 +43,8 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     username: string = '';
     info: string = '';
     userAccount: TwitchLogin | undefined;
+    websiteName = websiteName;
+    websiteEnding = websiteEnding;
     private subscriptions: Subscription[] = [];
 
     version = version;
