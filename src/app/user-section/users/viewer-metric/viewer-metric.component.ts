@@ -44,6 +44,7 @@ Chart.register(annotationPlugin);
         class="position-absolute top-0 start-0 ms-5 overflow-auto"
         [class.raids-shown]="raidsExpanded"
         [raids]="userData.RaidStatistic?.raidsOverTime || []"
+        [topRaiders]="userData.RaidStatistic?.topRaiders || {}"
         [colorMap]="raidColorMap"
         [openChatFn]="openChat.bind(this)"
         [getFormattedDateSince]="getFormattedDateSince"

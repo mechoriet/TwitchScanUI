@@ -17,10 +17,11 @@ import { CommonModule } from '@angular/common';
         <div class="raid-panel-content">
           <div *ngFor="let raid of sortedRaids; trackBy: trackByFn"
                (click)="openChat(raid.value)"
-               class="raid-item pointer"
+               class="raid-item row m-0 pointer"
                [ngStyle]="{ 'border-left-color': getColorByKey(raid.value) }">
-            <div class="raid-name">{{ raid.value }}</div>
-            <div class="raid-time">{{ getFormattedDateSince(raid.key) }}</div>
+            <div class="raid-name col text-truncate">{{ raid.value }}</div>
+            <div class="raid-viewers col">{{ raid.amount }} viewers</div>
+            <div class="raid-time col">{{ getFormattedDateSince(raid.key) }}</div>
           </div>
         </div>
       </div>
@@ -50,7 +51,6 @@ import { CommonModule } from '@angular/common';
       margin-bottom: 2px;
       background-color: rgba(0,0,0,0.2);
       border-left: 3px solid #ccc;
-      border-radius: 2px;
       font-size: 12px;
     }
     .raid-item:hover {
@@ -73,19 +73,26 @@ import { CommonModule } from '@angular/common';
 })
 export class RaidListComponent implements OnChanges {
   @Input() raids: { key: string; value: string }[] = [];
+  @Input() topRaiders: { [key: string]: number } = {};
   @Input() colorMap: { [key: string]: string } = {};
   @Input() openChatFn: (user: string) => void = () => {};
   @Input() getFormattedDateSince: (date: string) => string = () => '';
   @Input() toggleRaidsFn: (isExpanded: boolean) => void = () => {};
   
   isExpanded = false;
-  sortedRaids: { key: string; value: string }[] = [];
+  sortedRaids: { key: string; value: string, amount: number }[] = [];
   
   ngOnChanges(): void {
-    // Sort raids by time, newest first
-    this.sortedRaids = [...this.raids].sort((a, b) => 
-      new Date(b.key).getTime() - new Date(a.key).getTime()
-    );
+    if (this.raids.length === this.sortedRaids.length) {
+      return
+    }
+
+    // Sort raids by time, newest first, find raider in topRaiders and add amount
+    this.sortedRaids = this.raids
+      .map(raid => ({ ...raid, amount: this.topRaiders[raid.value] || 0 }))
+      .sort((a, b) => new Date(b.key).getTime() - new Date(a.key).getTime());
+
+    console.log(this.sortedRaids);
   }
   
   toggleRaidList(): void {
