@@ -1,49 +1,98 @@
-<div class="card border-secondary bg-dark text-light text-center h-100 m-0 p-1">
-    <form [formGroup]="observeForm" (ngSubmit)="onAddTextToObserve()">
-        <div class="input-group">
-            <input type="text" class="form-control bg-glass text-light border-secondary no-drag"
-                placeholder="Enter username/text to observe" formControlName="observeText" />
-            <button class="btn btn-outline-light border-secondary" type="submit" [disabled]="observeForm.invalid">
-                Add
-            </button>
+<div class="chat-container">
+    <!-- Header with search and filters -->
+    <div class="chat-header">
+      <form [formGroup]="observeForm" (ngSubmit)="onAddTextToObserve()" class="observe-form">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <i class="fa fa-search search-icon"></i>
+            <input 
+              type="text" 
+              class="search-input no-drag"
+              placeholder="Track username or text..." 
+              formControlName="observeText"
+              [attr.disabled]="loading ? true : null" />
+          </div>
         </div>
-    </form>
-    <!-- Badges for each observed text -->
-    <div class="mt-2 mx-2 no-drag">
-        <span @messageAnimation *ngFor="let text of observedTexts" class="badge bg-danger me-2 pointer"
+      </form>
+      
+      <!-- Tracked terms chips -->
+      <div class="tracked-terms" *ngIf="observedTexts.size > 0">
+        <div class="tracked-terms-label">Tracking:</div>
+        <div class="tracked-terms-chips">
+          <div 
+            @messageAnimation 
+            *ngFor="let text of observedTexts" 
+            class="tracked-chip"
             (click)="removeObservedText(text)">
-            {{ text }} ({{ observedTextCounts[text] || 0 }})
-        </span>
-    </div>
-
-    <!-- Pinned (observed) messages section -->
-    <div class="pinned-messages bg-glass p-2 mt-5 rounded position-absolute translate-middle-x start-50 z-100 no-drag"
-        *ngIf="observedMessages.length > 0" style="margin-top: 5rem !important; width: 90% !important;">
-        <div @messageAnimation *ngFor="let message of observedMessages" class="mb-2 observed text-light">
-            <strong [style.color]="message.chatMessage.colorHex" class="me-1 pointer" (click)="openChat(message.chatMessage.username)">
-                {{ message.chatMessage.username }}:
-            </strong>
-            <span>{{ message.chatMessage.message }}</span>
+            <span class="tracked-text">{{ text }}</span>
+            <span class="tracked-count">{{ observedTextCounts[text] || 0 }}</span>
+            <i class="fa fa-times-circle remove-icon"></i>
+          </div>
         </div>
+      </div>
     </div>
-
-    <!-- Chat messages section -->
-    <div class="chat-messages text-start mt-2 bg-glass text-light p-3 border border-secondary rounded flex-grow-1 overflow-auto no-drag"
-        #chatMessagesContainer (scroll)="onScroll()">
-        <!-- Regular chat messages -->
-        <div @messageAnimation *ngFor="let message of chatMessages" class="mb-2" [ngClass]="{
-    highlight: containsObservedText(message.chatMessage.username + ': ' + message.chatMessage.message)
-  }">
-            <strong [style.color]="message.chatMessage.colorHex" class="me-1 pointer" (click)="openChat(message.chatMessage.username)">
-                {{ message.chatMessage.username }}:
-            </strong>
-            <!-- Use innerHTML to display emotes as images in the message -->
-            <span [innerHTML]="message.chatMessage.message"></span>
+  
+    <!-- Main chat area -->
+    <div class="chat-body">
+      <!-- Pinned messages panel -->
+      <div 
+        @messageAnimation 
+        class="pinned-messages" 
+        *ngIf="observedMessages.length > 0">
+        <div class="pinned-header">
+          <div class="pinned-title">
+            <i class="fa fa-thumb-tack"></i>
+            <span>Tracked Messages ({{ observedMessages.length }})</span>
+          </div>
         </div>
+        <div class="pinned-list">
+          <div 
+            @messageAnimation 
+            *ngFor="let message of observedMessages" 
+            class="message pinned-message">
+            <div class="message-header">
+              <div 
+                class="username" 
+                [style.color]="message.chatMessage.colorHex" 
+                (click)="openChat(message.chatMessage.username)">
+                {{ message.chatMessage.username }}
+              </div>
+              <div class="message-time">{{ formatTimestamp(message.time) }}</div>
+            </div>
+            <div class="message-content" [innerHTML]="message.chatMessage.message"></div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Regular chat messages -->
+      <div 
+        class="messages-container" 
+        #chatMessagesContainer 
+        (scroll)="onScroll()">
+        <div 
+          @messageAnimation 
+          *ngFor="let message of chatMessages" 
+          class="message" 
+          [ngClass]="{'highlighted-message': containsObservedText(message.chatMessage.username + ': ' + message.chatMessage.message)}">
+          <div class="message-header">
+            <div 
+              class="username" 
+              [style.color]="message.chatMessage.colorHex" 
+              (click)="openChat(message.chatMessage.username)">
+              {{ message.chatMessage.username }}
+            </div>
+            <div class="message-time">{{ formatTimestamp(message.time) }}</div>
+          </div>
+          <div class="message-content" [innerHTML]="message.chatMessage.message"></div>
+        </div>
+        
+        <!-- New messages notification when not scrolled to bottom -->
+        <div *ngIf="retainedMessages.length > 0 && !isScrolledToBottom" 
+             class="new-messages-indicator"
+             (click)="scrollToBottom()">
+          {{ retainedMessages.length }} new message{{ retainedMessages.length > 1 ? 's' : '' }}
+          <i class="fa fa-arrow-down"></i>
+        </div>
+      </div>
     </div>
-
-    <!-- Scroll to bottom button -->
-    <button *ngIf="!isScrolledToBottom" class="btn btn-outline-light scroll-to-bottom-btn no-drag" (click)="scrollToBottom()">
-        <i class="fas fa-arrow-down"></i>
-    </button>
-</div>
+  </div>

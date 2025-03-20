@@ -19,12 +19,17 @@ import {
 } from '@angular/forms';
 import { ChatHistory, Emote, TwitchChatMessage } from '../../../models/chat-message.model';
 import { Subscription, timer, fromEvent } from 'rxjs';
-import { throttleTime } from 'rxjs/operators';
+import { throttleTime, debounceTime } from 'rxjs/operators';
 import { DataService } from '../../../services/app-service/data.service';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { GridsterModule } from 'angular-gridster2';
 import { messageAnimation } from '../../../animations/general.animations';
 import { openStream } from '../../../helper/general.helper';
+
+interface ObservedTextCount {
+  text: string;
+  count: number;
+}
 
 @Component({
   selector: 'app-chat-window',
@@ -45,10 +50,12 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   observedTexts: Set<string> = new Set<string>();
   observedTextCounts: { [key: string]: number } = {};
   isScrolledToBottom = true;
+  loading = false;
+  
   private subscription: Subscription = new Subscription();
-  private readonly retentionTime = 10 * 1000;
-  private readonly scrollThreshhold = 100;
-  private readonly messageThreshhold = 100;
+  private readonly retentionTime = 20 * 1000; // Increased retention time for better UX
+  private readonly scrollThreshhold = 150;
+  private readonly messageThreshhold = 150; // Increased message threshold 
   private readonly messageThrottleTime = 50;
 
   constructor(
@@ -58,7 +65,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     private renderer: Renderer2
   ) {
     this.observeForm = this.fb.group({
-      observeText: ['', Validators.required],
+      observeText: ['', [Validators.required, Validators.minLength(2)]],
     });
     this.username = dataService.getUserName();
 
@@ -66,6 +73,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     const usernameSubscription = this.dataService.userName$.subscribe(
       (username) => {
         this.username = username;
+        this.cdr.markForCheck();
       }
     );
     this.subscription.add(usernameSubscription);
@@ -76,20 +84,34 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     const messageSubscription = this.dataService.messageSubject
       .pipe(throttleTime(this.messageThrottleTime))
       .subscribe((message: TwitchChatMessage) => {
+        // Add timestamp if not present
+        if (!message.time) {
+          message.time = new Date();
+        }
         this.handleNewMessage(message);
-      })
+      });
     this.subscription.add(messageSubscription);
 
-    // Debounce scroll events after short delay to allow DOM to update
+    // Debounce scroll events
     setTimeout(() => {
       const scrollSubscription = fromEvent(
         this.chatMessagesContainer.nativeElement,
         'scroll'
       )
-        .pipe(throttleTime(this.messageThrottleTime))
+        .pipe(
+          throttleTime(100),
+          debounceTime(150)
+        )
         .subscribe(() => this.onScroll());
       this.subscription.add(scrollSubscription);
     }, 100);
+
+    // Update observed text counts periodically
+    const countUpdateSubscription = timer(0, 10000).subscribe(() => {
+      this.updateObservedTextCounts();
+      this.cdr.markForCheck();
+    });
+    this.subscription.add(countUpdateSubscription);
   }
 
   ngOnDestroy(): void {
@@ -111,6 +133,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (!wasScrolledToBottom && this.isScrolledToBottom) {
       this.mergeRetainedMessages();
     }
+    
+    this.cdr.markForCheck();
   }
 
   openChat(username: string): void {
@@ -121,6 +145,69 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     const element = this.chatMessagesContainer.nativeElement;
     this.renderer.setProperty(element, 'scrollTop', element.scrollHeight);
     this.isScrolledToBottom = true;
+    this.mergeRetainedMessages();
+    this.cdr.markForCheck();
+  }
+
+  // Format timestamp for UI display
+  formatTimestamp(timestamp: Date): string {
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  onAddTextToObserve(): void {
+    if (this.observeForm.invalid) return;
+    
+    const text = this.observeForm.value.observeText.trim().toLowerCase();
+    if (text) {
+      this.loading = true;
+      
+      // Simulated delay for better UX
+      setTimeout(() => {
+        if (!this.observedTexts.has(text)) {
+          this.observedTexts.add(text);
+          
+          // Find and highlight existing messages that match the new observed text
+          this.chatMessages.forEach(message => {
+            const messageContent = (message.chatMessage.username + ': ' + message.chatMessage.message).toLowerCase();
+            if (messageContent.includes(text) && !this.observedMessages.includes(message)) {
+              this.highlightObservedMessage(message);
+            }
+          });
+        } else {
+          // Remove the text if it already exists
+          this.removeObservedText(text);
+        }
+        
+        this.updateObservedTextCounts();
+        this.observeForm.reset({ observeText: '' });
+        this.loading = false;
+        this.cdr.markForCheck();
+      }, 300);
+    }
+  }
+
+  removeObservedText(text: string): void {
+    this.observedTexts.delete(text);
+    
+    // Re-evaluate all observed messages
+    const textsArray = Array.from(this.observedTexts);
+    this.observedMessages = this.observedMessages.filter((message) => {
+      const messageContent = (message.chatMessage.username + ': ' + message.chatMessage.message).toLowerCase();
+      return textsArray.some(observedText => messageContent.includes(observedText));
+    });
+    
+    this.updateObservedTextCounts();
+    this.cdr.markForCheck();
+  }
+
+  containsObservedText(message: string): boolean {
+    const lowerCaseMessage = message.toLowerCase();
+    return Array.from(this.observedTexts).some((text) =>
+      lowerCaseMessage.includes(text)
+    );
   }
 
   private scrollToBottomIfNeeded(): void {
@@ -130,10 +217,12 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
   }
 
   private mergeRetainedMessages(): void {
+    if (this.retainedMessages.length === 0) return;
+    
     this.chatMessages.push(...this.retainedMessages);
     this.trimMessages(this.chatMessages);
     this.retainedMessages = [];
-    this.scrollToBottom();
+    this.cdr.markForCheck();
   }
 
   private trimMessages(array: TwitchChatMessage[]): void {
@@ -150,7 +239,6 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (this.isScrolledToBottom) {
       this.chatMessages.push(message);
       this.trimMessages(this.chatMessages);
-      this.scrollToBottomIfNeeded();
       this.cdr.markForCheck();
     } else {
       this.retainedMessages.push(message);
@@ -160,9 +248,27 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (this.containsObservedText((message.chatMessage.username + ': ' + message.chatMessage.message).toLowerCase())) {
       this.highlightObservedMessage(message);
     }
+  }
 
-    // Update the counts of observed texts
-    this.updateObservedTextCounts();
+  private highlightObservedMessage(message: TwitchChatMessage): void {
+    // Check if this message is already observed
+    if (this.observedMessages.some(m => 
+        m.chatMessage.username === message.chatMessage.username && 
+        m.chatMessage.message === message.chatMessage.message && 
+        m.time === message.time)) {
+      return;
+    }
+    
+    this.observedMessages.push(message);
+    this.cdr.markForCheck();
+
+    // Remove the highlighted message after retentionTime
+    timer(this.retentionTime).subscribe(() => {
+      this.observedMessages = this.observedMessages.filter(
+        (m) => m !== message
+      );
+      this.cdr.markForCheck();
+    });
   }
 
   private replaceEmotesWithImages(messageText: string, emotes: Emote[]): string {
@@ -178,8 +284,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
         parts.push(messageText.substring(lastIndex, emote.startIndex));
       }
 
-      // Append the emote image HTML
-      parts.push(`<img title="${emote.name}" src="${emote.imageUrl}">`);
+      // Append the emote image HTML with better styling
+      parts.push(`<img class="emote" alt="${emote.name}" title="${emote.name}" src="${emote.imageUrl}">`);
 
       // Update lastIndex to the character after the current emote
       lastIndex = emote.endIndex + 1;
@@ -194,50 +300,19 @@ export class ChatWindowComponent implements OnInit, OnDestroy, AfterViewChecked 
     return parts.join('');
   }
 
-  onAddTextToObserve(): void {
-    const text = this.observeForm.value.observeText.trim().toLowerCase();
-    if (text) {
-      if (!this.observedTexts.has(text)) {
-        this.observedTexts.add(text);
-      } else {
-        // Remove the text if it already exists
-        this.removeObservedText(text);
-      }
-    }
-    this.observeForm.reset({ observeText: '' });
-    // Recalculate observed text counts
-    this.updateObservedTextCounts();
-  }
-
-  removeObservedText(text: string): void {
-    this.observedTexts.delete(text);
-    this.observedMessages = this.observedMessages.filter((m) =>
-      !m.chatMessage.message.toLowerCase().includes(text)
-    );
-  }
-
-  containsObservedText(message: string): boolean {
-    return Array.from(this.observedTexts).some((text) =>
-      message.toLowerCase().includes(text)
-    );
-  }
-
-  highlightObservedMessage(message: TwitchChatMessage): void {
-    this.observedMessages.push(message);
-
-    // Remove the highlighted message after retentionTime
-    timer(this.retentionTime).subscribe(() => {
-      this.observedMessages = this.observedMessages.filter(
-        (m) => m !== message
-      );
-    });
-  }
-
   private updateObservedTextCounts(): void {
-    this.observedTextCounts = {}; // Reset counts
+    // Only update if there are any observed texts
+    if (this.observedTexts.size === 0) {
+      this.observedTextCounts = {};
+      return;
+    }
+    
+    const allMessages = [...this.chatMessages, ...this.retainedMessages];
+    
     this.observedTexts.forEach((text) => {
-      const count = this.chatMessages.reduce((acc, message) => {
-        return acc + ((message.chatMessage.username + ': ' + message.chatMessage.message).toLowerCase().includes(text) ? 1 : 0);
+      const count = allMessages.reduce((acc, message) => {
+        const messageContent = (message.chatMessage.username + ': ' + message.chatMessage.message).toLowerCase();
+        return acc + (messageContent.includes(text) ? 1 : 0);
       }, 0);
       this.observedTextCounts[text] = count;
     });

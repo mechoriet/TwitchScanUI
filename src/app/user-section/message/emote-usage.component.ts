@@ -118,7 +118,7 @@ export class EmoteUsageComponent implements OnDestroy {
 
   hasData(): boolean {
     return (
-      (this.emoteChartData.datasets[0].data && (this.emoteChartData.datasets[0].data as any[]).length > 1)
+      (this.emoteChartData.datasets[0].data && (this.emoteChartData.datasets[0].data as any[]).length > 0)
     );
   }
 

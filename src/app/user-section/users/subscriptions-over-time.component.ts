@@ -78,7 +78,7 @@ export class SubscriptionsOverTimeComponent implements OnDestroy {
   // Helper to decide if there is any data to show
   hasData(): boolean {
     return (
-      (this.chartData.datasets[0].data && (this.chartData.datasets[0].data as any[]).length > 1) ||
+      (this.chartData.datasets[0].data && (this.chartData.datasets[0].data as any[]).length > 0) ||
       (this.chartData.datasets[1].data && (this.chartData.datasets[1].data as any[]).length > 0)
     );
   }

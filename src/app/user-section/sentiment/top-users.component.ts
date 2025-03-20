@@ -26,7 +26,7 @@ import { DataService } from '../../services/app-service/data.service';
     </div>
 
     <ng-template #noData>
-      <div class="card border-0 bg-dark text-light text-center justify-content-center">
+      <div class="card border-secondary bg-dark text-light text-center justify-content-center">
         <h5>No User Data Available</h5>
       </div>
     </ng-template>

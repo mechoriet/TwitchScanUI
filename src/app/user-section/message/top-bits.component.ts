@@ -120,7 +120,7 @@ export class TopBitsComponent implements OnDestroy {
   
   hasData(): boolean {
     return (
-      (this.bitChartData.datasets[0].data && (this.bitChartData.datasets[0].data as any[]).length > 1)
+      (this.bitChartData.datasets[0].data && (this.bitChartData.datasets[0].data as any[]).length > 0)
     );
   }
 
