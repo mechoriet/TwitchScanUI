@@ -75,8 +75,22 @@ export class TopChatterComponent implements OnInit, OnDestroy {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: true },
+      legend: {
+        labels: { color: 'white', font: { size: 10 } },
+      },
       tooltip: { enabled: true },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'white',
+        },
+      },
+      y: {
+        ticks: {
+          color: 'white',
+        },
+      },
     },
     backgroundColor: '#212529',
     animation: false,
