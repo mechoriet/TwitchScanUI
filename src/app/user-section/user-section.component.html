@@ -115,23 +115,16 @@
     <gridster [options]="gridsterOptions" class="grid-container">
       <gridster-item *ngFor="let item of gridsterLayout" [item]="item" class="grid-item d-flex flex-column" @profileViewAnimation>
         <div class="card-header flex-shrink-0">
-          <span class="card-title" *ngFor="let component of components">
-            <ng-container *ngIf="item.type === component.type">
-              <i [ngClass]="component.icon + ' me-2'"></i>{{ component.name }}
-            </ng-container>
+          <span class="card-title">
+            <i [ngClass]="getComponentIcon(item.type) + ' me-2'"></i>{{ getComponentName(item.type) }}
           </span>
         </div>
         <div class="card-body flex-grow-1 p-0 position-relative">
-          <ng-container *ngFor="let component of components">
-            <ng-container *ngIf="item.type === component.type">
-              <div class="h-100 w-100 overflow-auto position-absolute top-0 start-0 py-2 px-1">
-                <ng-container *ngComponentOutlet="component.component"></ng-container>
-              </div>
-            </ng-container>
-          </ng-container>
+          <div class="h-100 w-100 overflow-auto position-absolute top-0 start-0 py-2 px-1">
+            <ng-container *ngComponentOutlet="getComponent(item.type)"></ng-container>
+          </div>
         </div>
       </gridster-item>
-      
     </gridster>
   </div>
 </div>

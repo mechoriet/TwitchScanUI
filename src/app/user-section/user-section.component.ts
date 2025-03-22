@@ -330,6 +330,18 @@ export class UserSectionComponent implements OnInit, OnDestroy {
     return this.gridsterLayout.some(item => item.type === componentType);
   }
 
+  getComponentIcon(type: ComponentType): string {
+    return this.components.find(c => c.type === type)?.icon || '';
+  }
+
+  getComponentName(type: ComponentType): string {
+    return this.components.find(c => c.type === type)?.name || '';
+  }
+
+  getComponent(type: ComponentType): any {
+    return this.components.find(c => c.type === type)?.component;
+  }
+
   // Fetch user data from the service
   fetchData(): void {
     this.subscriptions.add(
