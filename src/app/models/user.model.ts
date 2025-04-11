@@ -86,6 +86,7 @@ export class UserData {
   TotalUsers: number;
   UniqueWords: number;
   UniqueChatters: number;
+  FirstTimeChatter: number;
   WordFrequency: { [key: string]: number };
   BitsCheeredStatistic: { [key: string]: number };
   ChannelMetrics: ChannelMetrics;
@@ -116,6 +117,7 @@ export class UserData {
     this.TotalUsers = 0;
     this.UniqueWords = 0;
     this.UniqueChatters = 0;
+    this.FirstTimeChatter = 0;
     this.WordFrequency = {};
     this.BitsCheeredStatistic = {};
     this.ChannelMetrics = {
