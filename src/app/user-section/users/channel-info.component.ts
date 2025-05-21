@@ -84,7 +84,7 @@ import { Subscription } from 'rxjs';
             </tr>
             <tr>
                 <th class="text-start p-0 px-1 w-100 border-secondary text-stat">
-                    <i class="fa-solid me-1 fa-users-between-lines"></i> Total New Chatters
+                    <i class="fa-solid me-1 fa-user-plus"></i> Total New Chatters
                 </th>
                 <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.FirstTimeChatter }}</td>
             </tr>
