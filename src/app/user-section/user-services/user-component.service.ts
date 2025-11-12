@@ -13,6 +13,7 @@ import { ChatWindowComponent } from '../users/chat-window/chat-window.component'
 import { EmoteUsageComponent } from '../message/emote-usage.component';
 import { TopBitsComponent } from '../message/top-bits.component';
 import { ViewerMetricComponent } from '../users/viewer-metric/viewer-metric.component';
+import { FollowerInfoComponent } from '../users/follower-info.component';
 
 export enum ComponentType {
     ChannelInfo = 'ChannelInfo',
@@ -30,6 +31,7 @@ export enum ComponentType {
     EmoteUsage = 'EmoteUsage',
     TopBitsCheered = 'TopBitsCheered',
     VodList = 'VodList',
+    Followers = 'Followers'
 }
 
 export const COMPONENTS = [
@@ -116,6 +118,12 @@ export const COMPONENTS = [
         type: ComponentType.TopBitsCheered,
         icon: 'fa-solid fa-gem',
         component: TopBitsComponent
+    },
+    {
+        name: 'Followers over time',
+        type: ComponentType.Followers,
+        icon: 'fa-solid fa-person-circle-plus',
+        component: FollowerInfoComponent
     }
 ];
 

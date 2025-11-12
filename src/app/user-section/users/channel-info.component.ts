@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserData } from '../../models/user.model';
 import { DataService } from '../../services/app-service/data.service';
@@ -44,7 +44,7 @@ import { Subscription } from 'rxjs';
                 <th class="text-start p-0 px-1 w-100 border-secondary text-stat">
                     <i class="fa-solid me-1 fa-comment"></i> Unique Chatter
                 </th>
-                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.UniqueChatters }} ({{ (activeChatterPercentage() ?? 0).toFixed(2) }}%)</td>
+                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.UniqueChatters }} ({{ (activeChatterPercentage()).toFixed(2) }}%)</td>
             </tr>
             <tr>
                 <th class="text-start p-0 px-1 w-100 border-secondary text-stat">
@@ -93,6 +93,12 @@ import { Subscription } from 'rxjs';
                     <i class="fa-solid me-1 fa-ban"></i> Total Timeouts
                 </th>
                 <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalTimeouts.totalTimeouts }}</td>
+            </tr>
+            <tr>
+                <th class="text-start p-0 px-1 w-100 border-secondary text-stat">
+                    <i class="fa-solid me-1 fa-trash"></i> Total Deleted Messages
+                </th>
+                <td class="text-start p-0 px-1 w-100 border-secondary text-truncate">{{ userData.TotalDeletedMessages }}</td>
             </tr>
             <tr>
                 <th class="text-start p-0 px-1 w-100 border-secondary text-stat">
@@ -147,49 +153,90 @@ import { Subscription } from 'rxjs';
     `,
   ],
 })
-export class ChannelInfoComponent {
+export class ChannelInfoComponent implements OnInit, OnDestroy {
   userData!: UserData;
-  subscriptions: Subscription = new Subscription();
+  private subscriptions = new Subscription();
+  
+  // Cache for formatted intervals to avoid repeated calculations
+  private intervalCache = new Map<number, string>();
 
-  constructor(public dataService: DataService) {
-    this.userData = dataService.getUserData();
-    this.subscriptions.add(this.dataService.userData$.subscribe((userData) => {
-      this.userData = userData;
-    }));
+  constructor(public dataService: DataService) {}
+
+  ngOnInit(): void {
+    // Move subscription to ngOnInit instead of constructor
+    this.subscriptions.add(
+      this.dataService.userData$.subscribe((userData) => {
+        this.userData = userData;
+        // Clear cache when userData changes
+        this.intervalCache.clear();
+      })
+    );
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    this.intervalCache.clear(); // Clean up cache
   }
 
-  activeChatterPercentage(): number | undefined {
-    return this.userData.UniqueChatters ? (this.userData.UniqueChatters / this.userData.ChannelMetrics.viewerStatistics.peakViewers) * 100 : 0;
+  activeChatterPercentage(): number {
+    if (!this.userData?.UniqueChatters || !this.userData?.ChannelMetrics?.viewerStatistics?.peakViewers) {
+      return 0;
+    }
+    
+    const peakViewers = this.userData.ChannelMetrics.viewerStatistics.peakViewers;
+    if (peakViewers === 0) {
+      return 0; // Prevent division by zero
+    }
+    
+    return Math.round((this.userData.UniqueChatters / peakViewers) * 100);
   }
 
   formatMessageInterval(intervalMs: number): string {
-    if (intervalMs < 1000) {
-      return `${intervalMs.toFixed(2)} ms`;
-    } else if (intervalMs < 60000) {
-      return `${(intervalMs / 1000).toFixed(2)} s`;
-    } else if (intervalMs < 3600000) {
-      return `${(intervalMs / 60000).toFixed(2)} min`;
-    } else {
-      return `${(intervalMs / 3600000).toFixed(2)} h`;
+    // Use cache to avoid repeated calculations
+    if (this.intervalCache.has(intervalMs)) {
+      return this.intervalCache.get(intervalMs)!;
     }
+
+    let result: string;
+    
+    if (intervalMs < 1000) {
+      result = `${intervalMs.toFixed(2)} ms`;
+    } else if (intervalMs < 60000) {
+      result = `${(intervalMs / 1000).toFixed(2)} s`;
+    } else if (intervalMs < 3600000) {
+      result = `${(intervalMs / 60000).toFixed(2)} min`;
+    } else {
+      result = `${(intervalMs / 3600000).toFixed(2)} h`;
+    }
+
+    this.intervalCache.set(intervalMs, result);
+    return result;
   }
 
   formatAverage(average: number): string {
+    // Add null/undefined check and use integer check
+    if (average == null || !Number.isFinite(average)) {
+      return '0';
+    }
     return Math.round(average).toLocaleString();
   }
 
   formatDate(dateString: string): string {
+    // Add null/undefined check
+    if (!dateString) {
+      return '';
+    }
+    
     if (!dateString.includes('.')) {
       return dateString;
     }
+    
     const parts = dateString.split('.');
-    if (parts.length === 3) {
-      return `${parts[0]}d ${parts[1]}`;
-    }
-    return parts[0];
+    return parts.length === 3 ? `${parts[0]}d ${parts[1]}` : parts[0];
+  }
+
+  // Optional: Add method to manually clear cache if needed
+  clearCache(): void {
+    this.intervalCache.clear();
   }
 }
